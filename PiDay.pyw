@@ -215,7 +215,11 @@ class PiDay(tk.Frame):
             # Ensure that the event is not on a calendar that the user does not wish to see
             if event['pGuid'] not in exceptions:
                 daysDiff = (datetime.strptime(str(event['startDate'][0]), dateFormat) - datetime.strptime(today, dateFormat)).days
-                self.daySeparatedEventList[daysDiff].append(event)
+                # Try statement needed because the API hands back a list of the next 7 days with events so if the current day has no events then it will hand back too many days and the number of days' difference will be 7, exceeding the length of our list
+                try:
+                    self.daySeparatedEventList[daysDiff].append(event)
+                except:
+                    pass
         # Sort each list of events by start time
         for listOfEvents in self.daySeparatedEventList:
             listOfEvents.sort(key=operator.itemgetter('startDate'))
@@ -256,6 +260,12 @@ class PiDay(tk.Frame):
                 detailStr = detailStr[:-8]
             # Create a label to show data
             lbl = tk.Label(self.calendarFrame, text=detailStr, wraplength="1000", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
+            lbl.pack(fill=tk.BOTH, expand=True)
+
+        # If there are no events on this day then display a message instead of leaving the space blank
+        if len(eventsOnSelectedDay) == 0:
+            # Create a label to show message
+            lbl = tk.Label(self.calendarFrame, text="There are no scheduled events on this day", wraplength="1000", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
             lbl.pack(fill=tk.BOTH, expand=True)
 
     def getDaySelectionWidget(self):
