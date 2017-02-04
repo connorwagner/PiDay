@@ -214,7 +214,7 @@ class PiDay(tk.Frame):
         for event in events:
             # Ensure that the event is not on a calendar that the user does not wish to see
             if event['pGuid'] not in exceptions:
-                daysDiff = (datetime.strptime(str(event['startDate'][0]), dateFormat) - datetime.strptime(today, dateFormat)).days
+                daysDiff = (datetime.strptime(str(event['localStartDate'][0]), dateFormat) - datetime.strptime(today, dateFormat)).days
                 # Try statement needed because the API hands back a list of the next 7 days with events so if the current day has no events then it will hand back too many days and the number of days' difference will be 7, exceeding the length of our list
                 try:
                     self.daySeparatedEventList[daysDiff].append(event)
@@ -222,7 +222,7 @@ class PiDay(tk.Frame):
                     pass
         # Sort each list of events by start time
         for listOfEvents in self.daySeparatedEventList:
-            listOfEvents.sort(key=operator.itemgetter('startDate'))
+            listOfEvents.sort(key=operator.itemgetter('localStartDate'))
 
         # Update widget to reflect new data
         self.getCalendarWidget()
@@ -239,14 +239,14 @@ class PiDay(tk.Frame):
         eventsOnSelectedDay = self.daySeparatedEventList[self.selectedDay.get()]
         for event in eventsOnSelectedDay:
             # Sanitize edge cases
-            startHour = event['startDate'][4]
+            startHour = event['localStartDate'][4]
             startHourAmPm = "AM"
             if startHour >= 12:
                 startHour -= 12
                 startHourAmPm = "PM"
             if startHour == 0:
                 startHour = 12
-            endHour = event['endDate'][4]
+            endHour = event['localEndDate'][4]
             endHourAmPm = "AM"
             if endHour >= 12:
                 endHour -= 12
@@ -254,7 +254,7 @@ class PiDay(tk.Frame):
             if endHour == 0:
                 endHour = 12
             # Create string to display
-            detailStr = "%s: %i:%02i %s to %i:%02i %s at %s" % (event['title'], startHour, event['startDate'][5], startHourAmPm, endHour, event['endDate'][5], endHourAmPm, event['location'])
+            detailStr = "%s: %i:%02i %s to %i:%02i %s at %s" % (event['title'], startHour, event['localStartDate'][5], startHourAmPm, endHour, event['localEndDate'][5], endHourAmPm, event['location'])
             # If there is no location then remove the end of the string ("… at …")
             if event['location'] == None:
                 detailStr = detailStr[:-8]
