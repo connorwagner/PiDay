@@ -3,6 +3,7 @@ import time
 import json
 import urllib.request
 import operator
+import subprocess
 from datetime import datetime, timedelta
 
 import schedule
@@ -268,6 +269,34 @@ class PiDay(tk.Frame):
             lbl = tk.Label(self.calendarFrame, text="There are no scheduled events on this day", wraplength="1000", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
             lbl.pack(fill=tk.BOTH, expand=True)
 
+        # Get screen control widget at bottom of pane since we destroyed it at the top of this function
+        self.getScreenControlWidget()
+
+    def getScreenControlWidget(self):
+        # Create frame so widgets are displayed horizontally
+        topFrame = tk.Frame(self.calendarFrame, height=30, bg="#302F37")
+        topFrame.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        # Create exit button
+        exitBtn = tk.Button(topFrame, text="Exit", command=exit, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
+        exitBtn.pack(side=tk.LEFT, fill=tk.X, padx=70)
+
+        # Create frame to house brightness controls so they remain grouped together after autoformatting
+        brightnessFrame = tk.Frame(topFrame, height=30, bg="#302F37")
+        brightnessFrame.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Create brightness controls
+        brightLbl = tk.Label(brightnessFrame, text="Brightness:", justify=tk.LEFT, bg='#302F37', fg='#45A9F5')
+        brightLbl.pack(side=tk.LEFT)
+        darkBtn = tk.Button(brightnessFrame, text="Dark", command=self.darkScreen, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
+        darkBtn.pack(side=tk.LEFT, padx=10)
+        minBtn = tk.Button(brightnessFrame, text="–", command=self.decrBrightness, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
+        minBtn.pack(side=tk.LEFT)
+        plusBtn = tk.Button(brightnessFrame, text="+", command=self.incrBrightness, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
+        plusBtn.pack(side=tk.LEFT)
+        brightBtn = tk.Button(brightnessFrame, text="Bright", command=self.brightScreen, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
+        brightBtn.pack(side=tk.LEFT, padx=10)
+
     def getDaySelectionWidget(self):
         # Destroy all current children
         for child in self.daySelectionFrame.winfo_children():
@@ -304,12 +333,43 @@ class PiDay(tk.Frame):
         # Update calendar display to show new data
         self.getCalendarWidget()
 
+    def darkScreen(self):
+        self.modifyBrightness(11)
+
+    def decrBrightness(self):
+        brightness = self.getBrightness()
+        if brightness <= 26:
+            self.modifyBrightness(11)
+        else:
+            self.modifyBrightness(brightness - 15)
+
+    def incrBrightness(self):
+        brightness = self.getBrightness()
+        if brightness >= 240:
+            self.modifyBrightness(255)
+        else:
+            self.modifyBrightness(brightness + 15)
+
+    def brightScreen(self):
+        self.modifyBrightness(255)
+
+    def getBrightness(self):
+        with open('/sys/class/backlight/rpi_backlight/brightness', 'r') as brightnessFile:
+            return int(brightnessFile.read())
+
+    def modifyBrightness(self, brightness):
+        # Open brightness file to write modified brightness value to
+        with open('/sys/class/backlight/rpi_backlight/brightness', 'w') as brightnessFile:
+            subprocess.call(['echo',str(brightness)],stdout=brightnessFile)
+
+    # Make an HTTP request and return the decoded string
     def makeHTTPRequest(self, url):
         r = urllib.request.urlopen(url)
         response = r.read().decode('utf-8')
         r.close()
         return response
 
+# Start the program
 if __name__ == "__main__":
     root = tk.Tk()
     PiDay(root).pack(fill=tk.BOTH, expand=True)
@@ -321,4 +381,4 @@ if __name__ == "__main__":
 
 # Blue color: #45A9F5
 # Background grey/black color: #302F37
-# Dard background color: #242329
+# Dark background color: #242329
