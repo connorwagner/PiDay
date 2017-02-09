@@ -183,11 +183,11 @@ class PiDay(tk.Frame):
 
     def updateStocksWidget(self):
         # Get list of stocks desired from config file
-        stocksList = getStocks()
+        stocksListOfLists = getStocks()
         pricesStr = str()
-        for stock in stocksList:
+        for stockList in stocksListOfLists:
             # Get price for desired stock and add it to the string for the label
-            price = self.makeHTTPRequest('http://finance.yahoo.com/d/quotes.csv?s=' + stock + '&f=l1')
+            price = self.makeHTTPRequest('http://finance.yahoo.com/d/quotes.csv?s=' + stockList[0] + '&f=l1')
             pricesStr += "%s: $%.2f\n" % (stock, float(price))
         # Remove trailing newline character
         pricesStr = pricesStr[:-1]
