@@ -175,7 +175,7 @@ class PiDay(tk.Frame):
 
     def getStocksWidget(self):
         # Create a button to display stocks data and show details when clicked
-        self.stocksButton = tk.Button(self.firstPane, command=self.showStockDetails, text="STOCKS", wraplength="150", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
+        self.stocksButton = tk.Button(self.firstPane, command=self.showStocksDetails, text="STOCKS", wraplength="150", justify=tk.CENTER, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
         self.stocksButton.pack(fill=tk.BOTH, expand=True)
 
         # Update data on widget
@@ -188,7 +188,7 @@ class PiDay(tk.Frame):
         for stockList in stocksListOfLists:
             # Get price for desired stock and add it to the string for the label
             price = self.makeHTTPRequest('http://finance.yahoo.com/d/quotes.csv?s=' + stockList[0] + '&f=l1')
-            pricesStr += "%s: $%.2f\n" % (stock, float(price))
+            pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
         # Remove trailing newline character
         pricesStr = pricesStr[:-1]
         # Update text on label
@@ -330,7 +330,18 @@ class PiDay(tk.Frame):
         self.after(86400000, self.updateWidgetsAtMidnight)
 
     def showStocksDetails(self):
-        pass
+        # Generate string to display on info popup
+        stocksListOfLists = getStocks()
+        stocksStr = str()
+        for stockList in stocksListOfLists:
+            stocksStr += stockList[0] + ": " + str(stockList[2]) + " owned, bought at $" + str(stockList[1]) + "\n"
+        stocksStr = stocksStr[:-1]
+
+        # Update text on button
+        self.stocksButton.configure(text=stocksStr)
+
+        # Set a timer to restore normal text on stock button after 7.5 seconds
+        self.after(7500, self.updateStocksWidget)
 
     def dayChanged(self):
         # Update calendar display to show new data
