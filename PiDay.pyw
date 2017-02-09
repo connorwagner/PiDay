@@ -174,28 +174,28 @@ class PiDay(tk.Frame):
         self.weatherRecursiveCall = self.after(900000, self.updateWeatherWidget)
 
     def getStocksWidget(self):
-        # Create a label to display stocks data
-        self.stocksLabel = tk.Label(self.firstPane, text="STOCKS", wraplength="150", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
-        self.stocksLabel.pack(fill=tk.BOTH, expand=True)
+        # Create a button to display stocks data and show details when clicked
+        self.stocksButton = tk.Button(self.firstPane, command=self.showStocksDetails, text="STOCKS", wraplength="150", justify=tk.CENTER, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
+        self.stocksButton.pack(fill=tk.BOTH, expand=True)
 
         # Update data on widget
         self.updateStocksWidget()
 
     def updateStocksWidget(self):
         # Get list of stocks desired from config file
-        stocksList = getStocks()
+        stocksListOfLists = getStocks()
         pricesStr = str()
-        for stock in stocksList:
+        for stockList in stocksListOfLists:
             # Get price for desired stock and add it to the string for the label
-            price = self.makeHTTPRequest('http://finance.yahoo.com/d/quotes.csv?s=' + stock + '&f=l1')
-            pricesStr += "%s: $%.2f\n" % (stock, float(price))
+            price = self.makeHTTPRequest('http://finance.yahoo.com/d/quotes.csv?s=' + stockList[0] + '&f=l1')
+            pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
         # Remove trailing newline character
         pricesStr = pricesStr[:-1]
         # Update text on label
-        self.stocksLabel.configure(text=pricesStr)
+        self.stocksButton.configure(text=pricesStr)
 
-        # Start timer to update after 15 minutes
-        self.stocksRecursiveCall = self.after(600000, self.updateStocksWidget)
+        # Start timer to update after 5 minutes
+        self.stocksRecursiveCall = self.after(300000, self.updateStocksWidget)
 
     def getCalendarData(self):        
         now = datetime.now()
@@ -328,6 +328,26 @@ class PiDay(tk.Frame):
 
         self.after_cancel(self.midnightRecursiveCall)
         self.after(86400000, self.updateWidgetsAtMidnight)
+
+    def showStocksDetails(self):
+        # Generate string to display on info popup
+        stocksListOfLists = getStocks()
+        stocksStr = str()
+        for stockList in stocksListOfLists:
+            stocksStr += stockList[0] + ": " + str(stockList[2]) + " owned, bought at $" + str(stockList[1]) + "\n"
+        stocksStr = stocksStr[:-1]
+
+        # Update text on button
+        self.stocksButton.configure(text=stocksStr)
+
+        # Cancel the existing recursive call if it exists to avoid duplicate calls
+        try:
+            self.after_cancel(self.stocksUpdateRecursiveCall)
+        except:
+            pass
+        
+        # Set a timer to restore normal text on stock button after 7.5 seconds
+        self.stocksUpdateRecursiveCall = self.after(7500, self.updateStocksWidget)
 
     def dayChanged(self):
         # Update calendar display to show new data
