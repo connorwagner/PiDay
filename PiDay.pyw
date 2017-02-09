@@ -174,9 +174,9 @@ class PiDay(tk.Frame):
         self.weatherRecursiveCall = self.after(900000, self.updateWeatherWidget)
 
     def getStocksWidget(self):
-        # Create a label to display stocks data
-        self.stocksLabel = tk.Label(self.firstPane, text="STOCKS", wraplength="150", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
-        self.stocksLabel.pack(fill=tk.BOTH, expand=True)
+        # Create a button to display stocks data and show details when clicked
+        self.stocksButton = tk.Button(self.firstPane, command=self.showStockDetails, text="STOCKS", wraplength="150", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
+        self.stocksButton.pack(fill=tk.BOTH, expand=True)
 
         # Update data on widget
         self.updateStocksWidget()
@@ -192,10 +192,10 @@ class PiDay(tk.Frame):
         # Remove trailing newline character
         pricesStr = pricesStr[:-1]
         # Update text on label
-        self.stocksLabel.configure(text=pricesStr)
+        self.stocksButton.configure(text=pricesStr)
 
-        # Start timer to update after 15 minutes
-        self.stocksRecursiveCall = self.after(600000, self.updateStocksWidget)
+        # Start timer to update after 5 minutes
+        self.stocksRecursiveCall = self.after(300000, self.updateStocksWidget)
 
     def getCalendarData(self):        
         now = datetime.now()
@@ -328,6 +328,9 @@ class PiDay(tk.Frame):
 
         self.after_cancel(self.midnightRecursiveCall)
         self.after(86400000, self.updateWidgetsAtMidnight)
+
+    def showStocksDetails(self):
+        pass
 
     def dayChanged(self):
         # Update calendar display to show new data
