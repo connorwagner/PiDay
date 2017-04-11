@@ -1,4 +1,3 @@
-import tkinter as tk
 import time
 import json
 import urllib.request
@@ -11,40 +10,7 @@ from pyicloud import PyiCloudService
 
 from config import getUsername, getPassword, getStocks, getWeatherLocale, getCalendarExceptions
 
-# Create custom class to manage presentation
-class CustomPanedWindow(tk.Frame):
-    def __init__(self, parent):
-        tk.Frame.__init__(self, parent)
-        self.configure(bg='#242329')
-        self.panes = []
-
-    def add(self, widget, weight=1):
-        # Add a pane with the given weight
-        self.panes.append({"widget": widget, "weight": weight})
-        self.layout()
-
-    def layout(self):
-        # Delete all current children
-        for child in self.place_slaves():
-            child.place_forget()
-
-        total_weight = sum([pane["weight"] for pane in self.panes])
-        relx= 0
-
-        for i, pane in enumerate(self.panes):
-            relwidth = pane["weight"]/float(total_weight)
-            # Note: relative and absolute heights are additive; thus, for 
-            # something like 'relheight=.5, height=-1`, that means it's half
-            # the height of its parent, minus one pixel. 
-            if i == 0:
-                pane["widget"].place(x=0, y=0, relheight=1.0, relwidth=relwidth)
-            else:
-                pane["widget"].place(relx=relx, y=0, relheight=1.0, relwidth=relwidth, 
-                                     width=-2, x=2)
-            relx = relx + relwidth
-
-
-class PiDay(tk.Frame):
+class PiDay():
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
 
@@ -54,14 +20,8 @@ class PiDay(tk.Frame):
         self.dayAdjustment = int(time.strftime("%w"))
         self.selectedDay = tk.IntVar()
 
+        # TODO: #########################
         # Initialize presentation manager
-        paned = CustomPanedWindow(self)
-        paned.pack(side="top", fill="both", expand=True)
-
-        # Create panes to use in presentation manager
-        self.firstPane = tk.Frame(self, width=200, height=200, bg='#302F37')
-        self.calendarFrame = tk.Frame(self, width=200, height=200, bg='#302F37')
-        self.daySelectionFrame = tk.Frame(self, width=200, height=200, bg='#302F37')
 
         # Create widgets
         self.getTimeWidget()
@@ -77,35 +37,23 @@ class PiDay(tk.Frame):
         timeUntilMidnight = abs(tomorrow - now).seconds * 1000 + 1000
         self.midnightRecursiveCall = self.after(timeUntilMidnight, self.updateWidgetsAtMidnight)
 
-        # Add panes to presentation manager
-        paned.add(self.firstPane, 3)
-        paned.add(self.calendarFrame, 10)
-        paned.add(self.daySelectionFrame, 1)
-
     def getTimeWidget(self):
-        # Create a frame to contain the time and date labels in so that they are seen as one item when the presentation manager spaces the widgets
-        group = tk.LabelFrame(self.firstPane, borderwidth='0', bg='#302F37', fg='#45A9F5')
-        self.timeLabel = tk.Label(group, text="TIME", wraplength="150", justify=tk.CENTER, font=('times new roman', 24, 'bold'), bg='#302F37', fg='#45A9F5')
-        self.timeLabel.pack(fill=tk.BOTH, expand=True)
-        self.dateLabel = tk.Label(group, text="DATE", wraplength="150", justify=tk.CENTER, font=('times new roman', 14, 'bold'), bg='#302F37', fg='#45A9F5')
-        self.dateLabel.pack(fill=tk.BOTH, expand=True)
-        group.pack(fill=tk.X, expand=True)
+        # TODO: ###############
+        # Create time widget UI
 
         # Update data on widget
         self.updateTimeWidget()
 
     def updateTimeWidget(self):
+        # TODO: ############################################################
         # Update text on both time and date widgets to reflect new time/date
-        self.timeLabel.configure(text=time.strftime("%-I:%M %p"))
-        self.dateLabel.configure(text=time.strftime("%B %-d"))
 
+        # TODO: ################################
         # Start timer to update data in 1 second
-        self.after(1000, self.updateTimeWidget)
 
     def getQuoteWidget(self):
-        # Create a label to display the quote on
-        self.quoteLabel = tk.Label(self.firstPane, text="JOKE", wraplength="150", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
-        self.quoteLabel.pack(fill=tk.BOTH, expand=True)
+        # TODO: ################
+        # Create quote widget UI
 
         # Update widget to display joke
         self.updateQuoteWidget()
@@ -115,12 +63,13 @@ class PiDay(tk.Frame):
         # Possibly change to http://tambal.azurewebsites.net/joke/random
         joke = self.makeHTTPRequest("http://ron-swanson-quotes.herokuapp.com/v2/quotes")
         joke = joke[1:-1] + "\n–Ron Swanson"
-        self.quoteLabel.configure(text=joke)
+
+        # TODO: ############
+        # Update quote label
 
     def getWeatherWidget(self):
-        # Create a label to display the weather
-        self.weatherLabel = tk.Label(self.firstPane, text="WEATHER", wraplength="150", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
-        self.weatherLabel.pack(fill=tk.BOTH, expand=True)
+        # TODO: ###########
+        # Create Weather UI
 
         # Update data on widget
         self.updateWeatherWidget()
@@ -168,15 +117,17 @@ class PiDay(tk.Frame):
 
         # Create string to display data and set label to show new string
         weatherText = "Weather for " + city + "\n" + currentTemp + " and " + currentCond + "\nHigh: " + highTemp + "\nLow: " + lowTemp
+
+        # TODO: ###########
+        # Update weather UI
         self.weatherLabel.configure(text=weatherText)
 
+        # TODO: #######################################
         # Start 30 minute timer to update weather again
-        self.weatherRecursiveCall = self.after(900000, self.updateWeatherWidget)
 
     def getStocksWidget(self):
-        # Create a button to display stocks data and show details when clicked
-        self.stocksButton = tk.Button(self.firstPane, command=self.showStocksDetails, text="STOCKS", wraplength="150", justify=tk.CENTER, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
-        self.stocksButton.pack(fill=tk.BOTH, expand=True)
+        # TODO: #################
+        # Create stocks widget UI
 
         # Update data on widget
         self.updateStocksWidget()
@@ -191,11 +142,12 @@ class PiDay(tk.Frame):
             pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
         # Remove trailing newline character
         pricesStr = pricesStr[:-1]
-        # Update text on label
-        self.stocksButton.configure(text=pricesStr)
 
+        # TODO: ##########
+        # Update stocks UI
+
+        # TODO: ###############################
         # Start timer to update after 5 minutes
-        self.stocksRecursiveCall = self.after(300000, self.updateStocksWidget)
 
     def getCalendarData(self):        
         now = datetime.now()
@@ -228,14 +180,10 @@ class PiDay(tk.Frame):
         # Update widget to reflect new data
         self.getCalendarWidget()
 
+        # TODO: ##############################
         # Set timer to update after 30 minutes
-        self.calendarRecursiveCall = self.after(1800000, self.getCalendarData)
 
     def getCalendarWidget(self):
-        # Destroy all current children
-        for child in self.calendarFrame.winfo_children():
-            child.destroy()
-
         # Loop through all events on the selected day and add them to the widget as individual labels so they are spaced nicely by the presentation manager
         eventsOnSelectedDay = self.daySeparatedEventList[self.selectedDay.get()]
         for event in eventsOnSelectedDay:
@@ -259,52 +207,26 @@ class PiDay(tk.Frame):
             # If there is no location then remove the end of the string ("… at …")
             if event['location'] == None:
                 detailStr = detailStr[:-8]
-            # Create a label to show data
-            lbl = tk.Label(self.calendarFrame, text=detailStr, wraplength="1000", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
-            lbl.pack(fill=tk.BOTH, expand=True)
+
+            # TODO: ############
+            # Update Calendar UI
 
         # If there are no events on this day then display a message instead of leaving the space blank
         if len(eventsOnSelectedDay) == 0:
-            # Create a label to show message
-            lbl = tk.Label(self.calendarFrame, text="There are no scheduled events on this day", wraplength="1000", justify=tk.CENTER, bg='#302F37', fg='#45A9F5')
-            lbl.pack(fill=tk.BOTH, expand=True)
+            # TODO: ############
+            # Update Calendar UI
 
         # Get screen control widget at bottom of pane since we destroyed it at the top of this function
         self.getScreenControlWidget()
 
     def getScreenControlWidget(self):
-        # Create frame so widgets are displayed horizontally
-        topFrame = tk.Frame(self.calendarFrame, height=30, bg="#302F37")
-        topFrame.pack(side=tk.BOTTOM, fill=tk.X)
-        
-        # Create exit button
-        exitBtn = tk.Button(topFrame, text="Exit", command=exit, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
-        exitBtn.pack(side=tk.LEFT, fill=tk.X, padx=70)
-
-        # Create frame to house brightness controls so they remain grouped together after autoformatting
-        brightnessFrame = tk.Frame(topFrame, height=30, bg="#302F37")
-        brightnessFrame.pack(side=tk.LEFT, fill=tk.X, expand=True)
-
-        # Create brightness controls
-        brightLbl = tk.Label(brightnessFrame, text="Brightness:", justify=tk.LEFT, bg='#302F37', fg='#45A9F5')
-        brightLbl.pack(side=tk.LEFT)
-        darkBtn = tk.Button(brightnessFrame, text="Dark", command=self.darkScreen, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
-        darkBtn.pack(side=tk.LEFT, padx=10)
-        minBtn = tk.Button(brightnessFrame, text="–", command=self.decrBrightness, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
-        minBtn.pack(side=tk.LEFT)
-        plusBtn = tk.Button(brightnessFrame, text="+", command=self.incrBrightness, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
-        plusBtn.pack(side=tk.LEFT)
-        brightBtn = tk.Button(brightnessFrame, text="Bright", command=self.brightScreen, justify=tk.LEFT, activeforeground='#45A9F5', activebackground='#302F37', bg='#302F37', fg='#45A9F5')
-        brightBtn.pack(side=tk.LEFT, padx=10)
+        # TODO: #########################
+        # Create screen control widget UI
+        pass
 
     def getDaySelectionWidget(self):
-        # Destroy all current children
-        for child in self.daySelectionFrame.winfo_children():
-            child.destroy()
-        # Add new buttons in the proper order
-        for i in range(7):
-            btn = tk.Radiobutton(self.daySelectionFrame, text=self.days[(i + self.dayAdjustment) % len(self.days)], variable=self.selectedDay, value=i, command=self.dayChanged, indicatoron=False, borderwidth='0', selectcolor='#242329', activeforeground='#45A9F5', bg='#302F37', fg='#45A9F5')
-            btn.pack(fill=tk.BOTH, expand=True)
+        # TODO: #################
+        # Create day selection UI
 
     def updateWidgetsAtMidnight(self):
         # Update day ajuster and adjust day selection back one if necessary to maintain selected calendar day upon day change
@@ -316,18 +238,8 @@ class PiDay(tk.Frame):
         self.updateQuoteWidget()
         self.getDaySelectionWidget()
 
+        # TODO: ########################################################################################################
         # Cancel the recursive call that already existed to avoid duplicate calls and then call it again (for all below)
-        self.after_cancel(self.calendarRecursiveCall)
-        self.getCalendarData()
-
-        self.after_cancel(self.weatherRecursiveCall)
-        self.updateWeatherWidget()
-
-        self.after_cancel(self.stocksRecursiveCall)
-        self.updateStocksWidget()
-
-        self.after_cancel(self.midnightRecursiveCall)
-        self.after(86400000, self.updateWidgetsAtMidnight)
 
     def showStocksDetails(self):
         # Generate string to display on info popup
@@ -337,17 +249,17 @@ class PiDay(tk.Frame):
             stocksStr += stockList[0] + ": " + str(stockList[2]) + " owned, bought at $" + str(stockList[1]) + "\n"
         stocksStr = stocksStr[:-1]
 
-        # Update text on button
-        self.stocksButton.configure(text=stocksStr)
+        # TODO: ##########
+        # Update Stocks UI
 
         # Cancel the existing recursive call if it exists to avoid duplicate calls
         try:
             self.after_cancel(self.stocksUpdateRecursiveCall)
         except:
             pass
-        
+
+        # TODO: ##############################################################        
         # Set a timer to restore normal text on stock button after 7.5 seconds
-        self.stocksUpdateRecursiveCall = self.after(7500, self.updateStocksWidget)
 
     def dayChanged(self):
         # Update calendar display to show new data
@@ -391,13 +303,8 @@ class PiDay(tk.Frame):
 
 # Start the program
 if __name__ == "__main__":
-    root = tk.Tk()
-    PiDay(root).pack(fill=tk.BOTH, expand=True)
-    root.geometry("800x480")
-    root.configure(cursor='none')
-    root.attributes("-fullscreen", True)
-    root.title("PiDay")
-    root.mainloop()
+    # TODO: ###################
+    # Launch the application UI
 
 # Blue color: #45A9F5
 # Background grey/black color: #302F37
