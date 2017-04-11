@@ -1,3 +1,12 @@
+import kivy
+kivy.require('1.0.6')
+
+from kivy.app import App
+from kivy.uix.label import Label
+from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.boxlayout import BoxLayout
+
 import time
 import json
 import urllib.request
@@ -10,32 +19,153 @@ from pyicloud import PyiCloudService
 
 from config import getUsername, getPassword, getStocks, getWeatherLocale, getCalendarExceptions
 
-class PiDay():
-    def __init__(self, parent):
-        tk.Frame.__init__(self, parent)
+class TimeWidget(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(TimeWidget, self).__init__(**kwargs)
+
+        self.timeLabel = Label(text='12:34 AP', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.5))
+        self.dateLabel = Label(text='Month 12', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.5))
+
+class QuoteWidget(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(QuoteWidget, self).__init__(**kwargs)
+
+        self.quoteLabel = Label(text='Quote here', halign='center', valign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 1))
+
+class WeatherWidget(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(WeatherWidget, self).__init__(**kwargs)
+
+        self.weatherLabel = Label(text='Weather here', halign='center', valign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 1))
+
+class StockWidget(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(StockWidget, self).__init__(**kwargs)
+
+        self.stockLabel = Label(text='Stocks here', halign='center', valign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 1))
+
+class LeftPane(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(LeftPane, self).__init__(**kwargs)
+
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        self.timeWidget = TimeWidget()
+        self.quoteWidget = QuoteWidget()
+        self.weatherWidget = WeatherWidget()
+        self.stockWidget = StockWidget()
+
+class CalendarEvent(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(CalendarEvent, self).__init__(**kwargs)
+
+        self.nameLabel = Label(text='Event Name', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.5))
+        self.timeLabel = Label(text='12:34 AP', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.25))
+        self.locationLabel = Label(text='Event Location', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.25))
+
+class DaySelector(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(DaySelector, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 5
+
+        self.dayList = ['U', 'M', 'T', 'W', 'R', 'F', 'S']
+        self.dayAdjustment = int(time.strftime("%w"))
+
+        self.updateUI()
+
+    def updateUI(self):
+        # TODO: Remove all existing elements
+
+        btn1 = ToggleButton(text=self.dayList[self.dayAdjustment % len(self.dayList)], group='daySelector', state='down')
+        self.add_widget(btn1)
+
+        for i in range(1, len(self.dayList)):
+            btn = ToggleButton(text=self.dayList[(i + self.dayAdjustment) % len(self.dayList)], group='daySelector')
+            self.add_widget(btn)
+
+class CalendarWidget(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(CalendarWidget, self).__init__(**kwargs)
+
+        self.orientation = 'vertical'
+        self.spacing = 5
+
+        self.eventList = []
+        self.daySelector = DaySelector()
+
+        self.add_widget(self.daySelector)
+
+    def updateEvents(self, eventList):
+        # Clear event list
+        self.eventList = []
+
+        # Add new events to event list
+        for event in eventList:
+            self.eventList.append(event)
+
+        self.updateUI()
+
+    def updateUI(self):
+        # TODO: Remove all existing elements
+
+        for event in self.eventList:
+            self.add_widget(event)
+
+class MiddlePane(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(MiddlePane, self).__init__(**kwargs)
+
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        self.calendarWidget = CalendarWidget()
+
+        self.add_widget(self.calendarWidget)
+
+class RootLayout(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(RootLayout, self).__init__(**kwargs)
+
+        self.leftPane = LeftPane()
+        self.middlePane = MiddlePane()
+
+        self.add_widget(self.leftPane)
+        self.add_widget(self.middlePane)
+
+class PiDay(App):
+
+    def __init__(self, **kwargs):
+        super(PiDay, self).__init__(**kwargs)
 
         # Log in to iCloud API session and set up calendar control sessions
         self.icloudApi = PyiCloudService(getUsername(), getPassword())
-        self.days = ['U','M','T','W','R','F','S']
-        self.dayAdjustment = int(time.strftime("%w"))
-        self.selectedDay = tk.IntVar()
 
-        # TODO: #########################
         # Initialize presentation manager
-
-        # Create widgets
-        self.getTimeWidget()
-        self.getQuoteWidget()
-        self.getWeatherWidget()
-        self.getStocksWidget()
-        self.getCalendarData()
-        self.getDaySelectionWidget()
+        self.rootLayout = RootLayout()
 
         # Start timer to update widgets at midnight
         now = datetime.now()
         tomorrow = datetime(now.year, now.month, now.day) + timedelta(1)
         timeUntilMidnight = abs(tomorrow - now).seconds * 1000 + 1000
-        self.midnightRecursiveCall = self.after(timeUntilMidnight, self.updateWidgetsAtMidnight)
+
+        # TODO: ####################
+        # Create midnight timer call
+
+    def build(self):
+        return self.rootLayout
 
     def getTimeWidget(self):
         # TODO: ###############
@@ -50,6 +180,7 @@ class PiDay():
 
         # TODO: ################################
         # Start timer to update data in 1 second
+        pass
 
     def getQuoteWidget(self):
         # TODO: ################
@@ -120,7 +251,6 @@ class PiDay():
 
         # TODO: ###########
         # Update weather UI
-        self.weatherLabel.configure(text=weatherText)
 
         # TODO: #######################################
         # Start 30 minute timer to update weather again
@@ -204,7 +334,7 @@ class PiDay():
                 endHour = 12
             # Create string to display
             detailStr = "%s: %i:%02i %s to %i:%02i %s at %s" % (event['title'], startHour, event['localStartDate'][5], startHourAmPm, endHour, event['localEndDate'][5], endHourAmPm, event['location'])
-            # If there is no location then remove the end of the string ("… at …")
+            # If there is no location then remove the end of the string (… at …)
             if event['location'] == None:
                 detailStr = detailStr[:-8]
 
@@ -215,6 +345,7 @@ class PiDay():
         if len(eventsOnSelectedDay) == 0:
             # TODO: ############
             # Update Calendar UI
+            pass
 
         # Get screen control widget at bottom of pane since we destroyed it at the top of this function
         self.getScreenControlWidget()
@@ -227,6 +358,7 @@ class PiDay():
     def getDaySelectionWidget(self):
         # TODO: #################
         # Create day selection UI
+        pass
 
     def updateWidgetsAtMidnight(self):
         # Update day ajuster and adjust day selection back one if necessary to maintain selected calendar day upon day change
@@ -303,8 +435,7 @@ class PiDay():
 
 # Start the program
 if __name__ == "__main__":
-    # TODO: ###################
-    # Launch the application UI
+    PiDay().run()
 
 # Blue color: #45A9F5
 # Background grey/black color: #302F37
