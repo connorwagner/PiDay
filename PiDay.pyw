@@ -3,6 +3,7 @@ kivy.require('1.0.6')
 
 from kivy.app import App
 from kivy.uix.label import Label
+from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.boxlayout import BoxLayout
@@ -24,86 +25,124 @@ class TimeWidget(RelativeLayout):
     def __init__(self, **kwargs):
         super(TimeWidget, self).__init__(**kwargs)
 
-        self.timeLabel = Label(text='12:34 AP', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.5))
-        self.dateLabel = Label(text='Month 12', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.5))
+        # Initialize labels
+        self.timeLabel = Label(text='12:34 AP', halign='center', valign='center', pos_hint={'x': 0, 'y': 0.5}, size_hint=(1, 0.5))
+        self.dateLabel = Label(text='Month 12', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 0.5))
+
+        # Add labels to view
+        self.add_widget(self.timeLabel)
+        self.add_widget(self.dateLabel)
 
 class QuoteWidget(RelativeLayout):
 
     def __init__(self, **kwargs):
         super(QuoteWidget, self).__init__(**kwargs)
 
-        self.quoteLabel = Label(text='Quote here', halign='center', valign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 1))
+        # Initialize label
+        self.quoteLabel = Label(text='Quote here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
+
+        # Add label to view
+        self.add_widget(self.quoteLabel)
 
 class WeatherWidget(RelativeLayout):
 
     def __init__(self, **kwargs):
         super(WeatherWidget, self).__init__(**kwargs)
 
-        self.weatherLabel = Label(text='Weather here', halign='center', valign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 1))
+        # Initialize label
+        self.weatherLabel = Label(text='Weather here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
+
+        # Add label to view
+        self.add_widget(self.weatherLabel)
 
 class StockWidget(RelativeLayout):
 
     def __init__(self, **kwargs):
         super(StockWidget, self).__init__(**kwargs)
 
-        self.stockLabel = Label(text='Stocks here', halign='center', valign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 1))
+        # Initialize label
+        self.stockLabel = Label(text='Stocks here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
 
-class LeftPane(BoxLayout):
-
-    def __init__(self, **kwargs):
-        super(LeftPane, self).__init__(**kwargs)
-
-        self.orientation = 'vertical'
-        self.spacing = 10
-
-        self.timeWidget = TimeWidget()
-        self.quoteWidget = QuoteWidget()
-        self.weatherWidget = WeatherWidget()
-        self.stockWidget = StockWidget()
-
-class CalendarEvent(RelativeLayout):
-
-    def __init__(self, **kwargs):
-        super(CalendarEvent, self).__init__(**kwargs)
-
-        self.nameLabel = Label(text='Event Name', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.5))
-        self.timeLabel = Label(text='12:34 AP', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.25))
-        self.locationLabel = Label(text='Event Location', halign='center', pos_hint={'x': 0.1, 'y': 0.1}, size_hint=(1, 0.25))
+        # Add label to view
+        self.add_widget(self.stockLabel)
 
 class DaySelector(BoxLayout):
 
     def __init__(self, **kwargs):
         super(DaySelector, self).__init__(**kwargs)
 
+        # Configure DaySelector object
         self.orientation = 'horizontal'
-        self.spacing = 5
+        self.spacing = 2
 
+        # Initialize data variables
         self.dayList = ['U', 'M', 'T', 'W', 'R', 'F', 'S']
         self.dayAdjustment = int(time.strftime("%w"))
 
         self.updateUI()
 
     def updateUI(self):
-        # TODO: Remove all existing elements
+        # Remove all existing widgets
+        for child in self.children:
+            self.remove_widget(child)
 
+        # Add and activate first button
         btn1 = ToggleButton(text=self.dayList[self.dayAdjustment % len(self.dayList)], group='daySelector', state='down')
+        btn1.bind(on_press=self.dayChanged)
         self.add_widget(btn1)
 
+        # Add all other buttons
         for i in range(1, len(self.dayList)):
             btn = ToggleButton(text=self.dayList[(i + self.dayAdjustment) % len(self.dayList)], group='daySelector')
+            btn.bind(on_press=self.dayChanged)
             self.add_widget(btn)
+
+    def dayChanged(self, pressedBtn):
+        index = self.dayList.index(pressedBtn.text)
+
+        # TODO: Update calendar data shown
+        print(pressedBtn.text, index)
+
+class CalendarEvent(RelativeLayout):
+
+    def __init__(self, eventName, eventTime, eventLocation, **kwargs):
+        super(CalendarEvent, self).__init__(**kwargs)
+
+        # Initialize data variables
+        self.eventName = eventName
+        self.eventTime = eventTime
+        self.eventLocation = eventLocation
+
+        # Create labels
+        self.nameLabel = Label(text=self.eventName, halign='center', valign='center', pos_hint={'x': 0, 'y': 0.5}, size_hint=(1, 0.5))
+        self.timeLabel = Label(text=self.eventTime, halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(0.5, 0.5))
+        self.locationLabel = Label(text=self.eventLocation, halign='center', valign='center', pos_hint={'x': 0.5, 'y': 0}, size_hint=(0.5, 0.5))
+
+        # Add labels to view
+        self.add_widget(self.nameLabel)
+        self.add_widget(self.timeLabel)
+        self.add_widget(self.locationLabel)
 
 class CalendarWidget(BoxLayout):
 
     def __init__(self, **kwargs):
         super(CalendarWidget, self).__init__(**kwargs)
 
+        # Configure CalendarWidget object
         self.orientation = 'vertical'
         self.spacing = 5
 
-        self.eventList = []
+        # Initialize data variable
+        self.eventList = [CalendarEvent("Event Name 1", "12:34 AM", "Euler 201"),
+                          CalendarEvent("Event Name 2", "12:34 PM", "Euler 201"),
+                          CalendarEvent("Event Name 3", "12:34 AM", "Euler 201"),
+                          CalendarEvent("Event Name 4", "12:34 PM", "Euler 201")]
+
+        # Create DaySelector widget
         self.daySelector = DaySelector()
 
+        # Add widgets to view
+        self.updateUI()
         self.add_widget(self.daySelector)
 
     def updateEvents(self, eventList):
@@ -117,33 +156,156 @@ class CalendarWidget(BoxLayout):
         self.updateUI()
 
     def updateUI(self):
-        # TODO: Remove all existing elements
+        # Remove all existing widgets
+        for child in self.children:
+            self.remove_widget(child)
 
+        # Add new widgets
         for event in self.eventList:
             self.add_widget(event)
+
+    def showEventsForDay(self, dayNum):
+        print(dayNum)
+
+class BrightnessWidgets(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(BrightnessWidgets, self).__init__(**kwargs)
+
+        # Configure BrightnessWidgets object
+        self.orientation = 'vertical'
+        self.spacing = 5
+
+        # Create buttons
+        self.darkScreenBtn = Button(text="Go Dark", halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 0.5))
+        self.brightScreenBtn = Button(text="Turn It Up", halign='center', valign='center', pos_hint={'x': 0, 'y': 0.5}, size_hint=(1, 0.5))
+
+        # Configure buttons
+        self.darkScreenBtn.bind(on_press=self.darkScreen)
+        self.brightScreenBtn.bind(on_press=self.brightScreen)
+
+        # Add buttons to view
+        self.add_widget(self.darkScreenBtn)
+        self.add_widget(self.brightScreenBtn)
+
+    def darkScreen(self, *args):
+        self.modifyBrightness(11)
+
+    def decrBrightness(self):
+        brightness = self.getBrightness()
+
+        # Display shuts off below 11 so we want to make sure we will not go below 11
+        if brightness <= 26:
+            self.modifyBrightness(11)
+        else:
+            self.modifyBrightness(brightness - 15)
+
+    def incrBrightness(self):
+        brightness = self.getBrightness()
+
+        # Maximum value for brightness is 255, we want to ensure that we will not exceed it
+        if brightness >= 240:
+            self.modifyBrightness(255)
+        else:
+            self.modifyBrightness(brightness + 15)
+
+    def brightScreen(self, *args):
+        self.modifyBrightness(255)
+
+    def getBrightness(self):
+        # Open brightness file to read current value
+        with open('/sys/class/backlight/rpi_backlight/brightness', 'r') as brightnessFile:
+            return int(brightnessFile.read())
+
+    def modifyBrightness(self, brightness):
+        # Open brightness file to write modified brightness value to
+        with open('/sys/class/backlight/rpi_backlight/brightness', 'w') as brightnessFile:
+            subprocess.call(['echo',str(brightness)],stdout=brightnessFile)
+
+class ControlWidgets(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(ControlWidgets, self).__init__(**kwargs)
+
+        # Configure ControlWidgets object
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        # Create widgets
+        self.brightnessWidgets = BrightnessWidgets()
+        self.exitButton = Button(text="Exit", halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 0.25))
+
+        # Configure exit button
+        self.exitButton.bind(on_press=exit)
+
+        # Add widgets to view
+        self.add_widget(self.brightnessWidgets)
+        self.add_widget(self.exitButton)
+
+class RightPane(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(RightPane, self).__init__(**kwargs)
+
+        # Configure RightPane object
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        # Create widgets
+        self.controlWidgets = ControlWidgets()
+
+        # Add widgets to view
+        self.add_widget(self.controlWidgets)
 
 class MiddlePane(BoxLayout):
 
     def __init__(self, **kwargs):
         super(MiddlePane, self).__init__(**kwargs)
 
+        # Configure MiddlePane object
         self.orientation = 'vertical'
         self.spacing = 10
 
+        # Create widget
         self.calendarWidget = CalendarWidget()
 
+        # Add widget to view
         self.add_widget(self.calendarWidget)
+
+class LeftPane(BoxLayout):
+    def __init__(self, **kwargs):
+        super(LeftPane, self).__init__(**kwargs)
+
+        # Configure LeftPane object
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        # Create widgets
+        self.timeWidget = TimeWidget()
+        self.quoteWidget = QuoteWidget()
+        self.weatherWidget = WeatherWidget()
+        self.stockWidget = StockWidget()
+
+        # Add widgets to view
+        self.add_widget(self.timeWidget)
+        self.add_widget(self.quoteWidget)
+        self.add_widget(self.weatherWidget)
+        self.add_widget(self.stockWidget)
 
 class RootLayout(RelativeLayout):
 
     def __init__(self, **kwargs):
         super(RootLayout, self).__init__(**kwargs)
 
-        self.leftPane = LeftPane()
-        self.middlePane = MiddlePane()
+        # Configure display panes
+        self.leftPane = LeftPane(pos_hint={'x': 0, 'y': 0}, size_hint=(0.25, 1))
+        self.middlePane = MiddlePane(pos_hint={'x': 0.25, 'y': 0}, size_hint=(0.6, 1))
+        self.rightPane = RightPane(pos_hint={'x': 0.85, 'y': 0}, size_hint=(0.15, 1))
 
+        # Add panes to view
         self.add_widget(self.leftPane)
         self.add_widget(self.middlePane)
+        self.add_widget(self.rightPane)
 
 class PiDay(App):
 
@@ -213,7 +375,7 @@ class PiDay(App):
         # Sample URL: http://api.openweathermap.org/data/2.5/forecast?id=4927510&appid=533616ff356c7a5963e935e12fbb9306&units=imperial
         # JSON Structure: dictionary object 'list' is a list of dictionaries, each index increments by 3 hours
         #  one item in that dictionary is 'weather', that is a dictionary containing the weather conditions
-        #  another itme in that dictionary is 'main', that is a dictionary containing the weather statistics
+        #  another item in that dictionary is 'main', that is a dictionary containing the weather statistics
 
         # Get forecast data and convert to dictionary from JSON
         forecastJsonStr = self.makeHTTPRequest("http://api.openweathermap.org/data/2.5/forecast?q=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
@@ -396,35 +558,6 @@ class PiDay(App):
     def dayChanged(self):
         # Update calendar display to show new data
         self.getCalendarWidget()
-
-    def darkScreen(self):
-        self.modifyBrightness(11)
-
-    def decrBrightness(self):
-        brightness = self.getBrightness()
-        if brightness <= 26:
-            self.modifyBrightness(11)
-        else:
-            self.modifyBrightness(brightness - 15)
-
-    def incrBrightness(self):
-        brightness = self.getBrightness()
-        if brightness >= 240:
-            self.modifyBrightness(255)
-        else:
-            self.modifyBrightness(brightness + 15)
-
-    def brightScreen(self):
-        self.modifyBrightness(255)
-
-    def getBrightness(self):
-        with open('/sys/class/backlight/rpi_backlight/brightness', 'r') as brightnessFile:
-            return int(brightnessFile.read())
-
-    def modifyBrightness(self, brightness):
-        # Open brightness file to write modified brightness value to
-        with open('/sys/class/backlight/rpi_backlight/brightness', 'w') as brightnessFile:
-            subprocess.call(['echo',str(brightness)],stdout=brightnessFile)
 
     # Make an HTTP request and return the decoded string
     def makeHTTPRequest(self, url):
