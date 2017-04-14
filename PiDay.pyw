@@ -15,6 +15,7 @@ import urllib.request
 import subprocess
 from datetime import datetime, timedelta
 
+import operator
 from pyicloud import PyiCloudService
 
 from config import getUsername, getPassword, getStocks, getWeatherLocale, getCalendarExceptions
@@ -221,8 +222,11 @@ class DaySelector(BoxLayout):
             self.add_widget(btn)
 
     def dayChanged(self, pressedBtn):
-        self.selectedDay = self.dayList.index(pressedBtn.text)
+        self.selectedDay = (self.dayList.index(pressedBtn.text) + self.dayAdjustment) % 7 - 1
         self.calendarObject.updateUI()
+
+    def getSelectedDay(self):
+        return self.selectedDay
 
 class CalendarEvent(RelativeLayout):
 
@@ -275,11 +279,17 @@ class CalendarWidget(BoxLayout):
         self.orientation = 'vertical'
         self.spacing = 5
 
-        # Initialize data variable
-        self.eventListOfLists = []
+        # Log in to iCloud API session and set up calendar control sessions
+        self.icloudApi = PyiCloudService(getUsername(), getPassword())
+
+        # Initialize data variables
+        self.daySeparatedEventList = []
 
         # Create DaySelector widget
-        self.daySelector = DaySelector(self, size_hint=(1, 0.15))
+        self.daySelector = DaySelector(self, size=(0, 35), size_hint=(1, None))
+
+        # Get calendar data
+        self.getData()
 
         # Add widgets to view
         self.updateUI()
@@ -290,31 +300,55 @@ class CalendarWidget(BoxLayout):
 
     def updateUIFirstTime(self, *largs):
         # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        Clock.schedule_interval(self.updateUI, 86400, None)
+        Clock.schedule_interval(self.getData(), 86400, None)
 
-    def updateEvents(self, eventListOfLists):
-        # Clear event list
-        self.eventListOfLists = []
+    def getData(self):
+        now = datetime.now()
 
-        # Add new events to event list
-        for eventList in eventListOfLists:
-            tempList = list()
-            for event in eventList:
-                tempList.append(event)
-            self.eventListOfLists.append(tempList)
+        # Get list of exceptions from config
+        exceptions = getCalendarExceptions()
+
+        # Try to get calendar data, if an error is thrown then reauthenticate and try again
+        events = None
+        try:
+            events = self.icloudApi.calendar.events(now, now + timedelta(days=6))
+        except:
+            self.icloudApi = PyiCloudService(getUsername(), getPassword())
+            events = self.icloudApi.calendar.events(now, now + timedelta(days=6))
+
+        # Separate events into a list of lists separated by day
+        dateFormat = "%Y%m%d"
+        today = time.strftime(dateFormat)
+        self.daySeparatedEventList = [list(), list(), list(), list(), list(), list(), list()]
+        for event in events:
+            # Ensure that the event is not on a calendar that the user does not wish to see
+            if event['pGuid'] not in exceptions:
+                daysDiff = (datetime.strptime(str(event['localStartDate'][0]), dateFormat) - datetime.strptime(today, dateFormat)).days
+                # Try statement needed because the API hands back a list of the next 7 days with events in them, so if the current day has no events then it will hand back too many days and the number of days' difference will be 7, exceeding the length of our list
+                try:
+                    self.daySeparatedEventList[daysDiff].append(event)
+                except:
+                    pass
+
+        # Sort each list of events by start time
+        for listOfEvents in self.daySeparatedEventList:
+            listOfEvents.sort(key=operator.itemgetter('localStartDate'))
 
         self.updateUI()
 
     def updateUI(self, *largs):
         # Remove all existing widgets except for the day selector
-        for child in self.children:
+        for child in self.children[:]:
             if child != self.daySelector:
                 self.remove_widget(child)
 
         # Add new widgets
-        for event in self.eventListOfLists[self.daySelector.selectedDay]:
+        for event in self.daySeparatedEventList[(self.daySelector.getSelectedDay()) % 7]:
             # Add widgets at index 1 so they do not go below the day selector
-            self.add_widget(event, index=1)
+            self.add_widget(CalendarEvent(event), index=1)
+
+        if len(self.daySeparatedEventList[self.daySelector.getSelectedDay()]) == 0:
+            self.add_widget(Label(text="There are no events on this day."))
 
 class BrightnessWidgets(BoxLayout):
 
@@ -415,11 +449,11 @@ class MiddlePane(BoxLayout):
         self.orientation = 'vertical'
         self.spacing = 10
 
-        """"# Create widget
+        # Create widget
         self.calendarWidget = CalendarWidget()
 
         # Add widget to view
-        self.add_widget(self.calendarWidget)"""
+        self.add_widget(self.calendarWidget)
 
 class LeftPane(BoxLayout):
 
@@ -462,9 +496,6 @@ class PiDay(App):
     def __init__(self, **kwargs):
         super(PiDay, self).__init__(**kwargs)
 
-        # Log in to iCloud API session and set up calendar control sessions
-        self.icloudApi = PyiCloudService(getUsername(), getPassword())
-
         # Initialize presentation manager
         self.rootLayout = RootLayout()
 
@@ -472,7 +503,7 @@ class PiDay(App):
         return self.rootLayout
 
     def getCalendarWidget(self):
-        # Loop through all events on the selected day and add them to the widget as individual labels so they are spaced nicely by the presentation manager
+        # Loop through all events on the selected day and add them to the widget as individual objects
         eventsOnSelectedDay = self.daySeparatedEventList[self.selectedDay.get()]
         for event in eventsOnSelectedDay:
             # Sanitize edge cases
@@ -504,9 +535,6 @@ class PiDay(App):
             # TODO: ############
             # Update Calendar UI
             pass
-
-        # Get screen control widget at bottom of pane since we destroyed it at the top of this function
-        self.getScreenControlWidget()
 
     def showStocksDetails(self):
         # Generate string to display on info popup
