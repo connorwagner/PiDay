@@ -64,6 +64,7 @@ class QuoteWidget(BoxLayout):
     def updateUIFirstTime(self, *largs):
         # Update quote every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
         Clock.schedule_interval(self.updateUI, 86400)
+        self.updateUI()
 
     def updateUI(self, *largs):
         # Get quote from API call
@@ -205,6 +206,8 @@ class DaySelector(BoxLayout):
         # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
         Clock.schedule_interval(self.updateUI, 86400)
 
+        self.updateUI()
+
     def updateUI(self, *largs):
         # Remove all existing widgets
         for child in self.children:
@@ -300,9 +303,11 @@ class CalendarWidget(BoxLayout):
 
     def updateUIFirstTime(self, *largs):
         # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        Clock.schedule_interval(self.getData(), 86400, None)
+        Clock.schedule_interval(self.getData, 86400, None)
 
-    def getData(self):
+        self.getData()
+
+    def getData(self, *largs):
         now = datetime.now()
 
         # Get list of exceptions from config
