@@ -209,6 +209,8 @@ class DaySelector(BoxLayout):
         self.updateUI()
 
     def updateUI(self, *largs):
+        self.dayAdjustment = int(time.strftime("%w"))
+
         # Remove all existing widgets
         for child in self.children:
             self.remove_widget(child)
@@ -225,7 +227,7 @@ class DaySelector(BoxLayout):
             self.add_widget(btn)
 
     def dayChanged(self, pressedBtn):
-        self.selectedDay = (self.dayList.index(pressedBtn.text) + self.dayAdjustment) % 7 - 1
+        self.selectedDay = self.dayList.index(pressedBtn.text) - self.dayAdjustment
         self.calendarObject.updateUI()
 
     def getSelectedDay(self):
@@ -348,12 +350,12 @@ class CalendarWidget(BoxLayout):
                 self.remove_widget(child)
 
         # Add new widgets
-        for event in self.daySeparatedEventList[(self.daySelector.getSelectedDay()) % 7]:
+        for event in self.daySeparatedEventList[self.daySelector.getSelectedDay()]:
             # Add widgets at index 1 so they do not go below the day selector
             self.add_widget(CalendarEvent(event), index=1)
 
         if len(self.daySeparatedEventList[self.daySelector.getSelectedDay()]) == 0:
-            self.add_widget(Label(text="There are no events on this day."))
+            self.add_widget(Label(text="There are no events on this day."), index=1)
 
 class BrightnessWidgets(BoxLayout):
 
@@ -575,7 +577,3 @@ def makeHTTPRequest(url):
 # Start the program
 if __name__ == "__main__":
     PiDay().run()
-
-# Blue color: #45A9F5
-# Background grey/black color: #302F37
-# Dark background color: #242329
