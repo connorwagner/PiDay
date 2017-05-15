@@ -509,69 +509,19 @@ class PiDay(App):
     def build(self):
         return self.rootLayout
 
-    def getCalendarWidget(self):
-        # Loop through all events on the selected day and add them to the widget as individual objects
-        eventsOnSelectedDay = self.daySeparatedEventList[self.selectedDay.get()]
-        for event in eventsOnSelectedDay:
-            # Sanitize edge cases
-            startHour = event['localStartDate'][4]
-            startHourAmPm = "AM"
-            if startHour >= 12:
-                startHour -= 12
-                startHourAmPm = "PM"
-            if startHour == 0:
-                startHour = 12
-            endHour = event['localEndDate'][4]
-            endHourAmPm = "AM"
-            if endHour >= 12:
-                endHour -= 12
-                endHourAmPm = "PM"
-            if endHour == 0:
-                endHour = 12
-            # Create string to display
-            detailStr = "%s: %i:%02i %s to %i:%02i %s at %s" % (event['title'], startHour, event['localStartDate'][5], startHourAmPm, endHour, event['localEndDate'][5], endHourAmPm, event['location'])
-            # If there is no location then remove the end of the string (… at …)
-            if event['location'] == None:
-                detailStr = detailStr[:-8]
-
-            # TODO: ############
-            # Update Calendar UI
-
-        # If there are no events on this day then display a message instead of leaving the space blank
-        if len(eventsOnSelectedDay) == 0:
-            # TODO: ############
-            # Update Calendar UI
-            pass
-
-    def showStocksDetails(self):
-        # Generate string to display on info popup
-        stocksListOfLists = getStocks()
-        stocksStr = str()
-        for stockList in stocksListOfLists:
-            stocksStr += stockList[0] + ": " + str(stockList[2]) + " owned, bought at $" + str(stockList[1]) + "\n"
-        stocksStr = stocksStr[:-1]
-
-        # TODO: ##########
-        # Update Stocks UI
-
-        # Cancel the existing recursive call if it exists to avoid duplicate calls
-        try:
-            self.after_cancel(self.stocksUpdateRecursiveCall)
-        except:
-            pass
-
-        # TODO: ##############################################################        
-        # Set a timer to restore normal text on stock button after 7.5 seconds
-
 def getTimeToMidnight():
     now = datetime.now()
     tomorrow = datetime(now.year, now.month, now.day) + timedelta(1)
     return abs(tomorrow - now).seconds * 1000 + 1000
 
 def makeHTTPRequest(url):
-    r = urllib.request.urlopen(url)
-    response = r.read().decode('utf-8')
-    r.close()
+    response = ""
+    try:
+        r = urllib.request.urlopen(url)
+        response = r.read().decode('utf-8')
+        r.close()
+    except:
+        response = "Error retrieving data"
     return response
 
 # Start the program
