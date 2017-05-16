@@ -4,6 +4,7 @@ kivy.require('1.0.6')
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.popup import Popup
+from kivy.uix.progressbar import ProgressBar
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.button import Button
@@ -71,11 +72,12 @@ class QuoteWidget(BoxLayout):
     def updateUI(self, *largs):
         # Get quote from API call
         quote = makeHTTPRequest("http://ron-swanson-quotes.herokuapp.com/v2/quotes")
-        quote = quote[1:-1] + "\n–Ron Swanson"
 
         # If makeHTTPRequest returned False then there was an error, end the function
         if not quote:
             return
+
+        quote = quote[1:-1] + "\n–Ron Swanson"
 
         # Update text on label
         self.quoteLabel.text = quote
@@ -221,10 +223,14 @@ class DaySelector(BoxLayout):
         # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
         Clock.schedule_interval(self.updateUI, 86400)
 
+        print("DaySelector updateUIFirstTime running at", datetime.now())
+
         self.updateUI()
 
     def updateUI(self, *largs):
         self.dayAdjustment = int(time.strftime("%w"))
+
+        print("DaySelector updateUI running at", datetime.now())
 
         # Remove all existing widgets
         for child in self.children:
@@ -299,33 +305,47 @@ class CalendarWidget(BoxLayout):
         self.orientation = 'vertical'
         self.spacing = 5
 
-        # Log in to iCloud API session and set up calendar control sessions
-        self.icloudApi = PyiCloudService(getUsername(), getPassword())
+        # Create auth variables
+        self.twoFactorDone = False
+        self.twoFactorScreen = None
+        self.icloudApi = None
 
         # Initialize data variables
         self.daySeparatedEventList = []
 
         # Create DaySelector widget
         self.daySelector = DaySelector(self, size=(0, 35), size_hint=(1, None))
+        self.add_widget(self.daySelector)
 
+    def finishInitSetup(self):
         # Get calendar data
         self.getData()
 
         # Add widgets to view
         self.updateUI()
-        self.add_widget(self.daySelector)
 
         # Set timer to update widget at midnight
         Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
 
+    def authenticate(self):
+        self.icloudApi = PyiCloudService(getUsername(), getPassword())
+        if self.icloudApi.requires_2fa:
+            self.twoFactorScreen = TwoFactorAuthScreen(self)
+        else:
+            self.finishInitSetup()
+
     def updateUIFirstTime(self, *largs):
-        # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        Clock.schedule_interval(self.getData, 86400, None)
+        # Update widget every 30 minutes (30 minutes * 60 seconds = 1800 seconds)
+        Clock.schedule_interval(self.getData, 1800)
+
+        print("CalendarWidget updateUIFirstTime running at", datetime.now())
 
         self.getData()
 
     def getData(self, *largs):
         now = datetime.now()
+
+        print("CalendarWidget getData running at", datetime.now())
 
         # Get list of exceptions from config
         exceptions = getCalendarExceptions()
@@ -456,11 +476,11 @@ class QuotaWidget(BoxLayout):
         self.container.add_widget(self.dailyImage)
         self.container.add_widget(self.weeklyImage)
 
-    def loadDailyImage(self):
+    def loadDailyImage(self, *largs):
         with open('PiDay-v2/dailyQuota.png', 'w') as file:
             subprocess.call(['curl','http://quota.taylor.edu/cgi-bin/graph.py?range=daily', '-H', 'Host: quota.taylor.edu', '-H', 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:51.0) Gecko/20100101 Firefox/51.0', '-H', 'Accept: */*', '-H', 'Accept-Language: en-US,en;q=0.5', '--compressed', '-H', 'Referer: http://quota.taylor.edu/?login=y', '-H', 'Cookie: visid_incap_321279=A6FcWS3AS16yv2G4U+cPjq4qklgAAAAAQUIPAAAAAABSOGLKYVCByrmhuuGgvz2K; __utma=43697952.1078009590.1494436041.1494436041.1494436041.1; __utmz=43697952.1494436041.1.1.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); PHPSESSID=ST-52609-ZmUT9IMIGJ2eUd9FEUMO-ssotayloredu; pycas=5ce720a01494617705:connor_wagner', '-H', 'Connection: keep-alive'], stdout=file)
 
-    def loadWeeklyImage(self):
+    def loadWeeklyImage(self, *largs):
         with open('PiDay-v2/weeklyQuota.png', 'w') as file:
             subprocess.call(['curl', 'http://quota.taylor.edu/cgi-bin/graph.py?range=weekly', '-H', 'Host: quota.taylor.edu', '-H', 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:51.0) Gecko/20100101 Firefox/51.0', '-H', 'Accept: */*', '-H', 'Accept-Language: en-US,en;q=0.5', '--compressed', '-H', 'Referer: http://quota.taylor.edu/?login=y', '-H', 'Cookie: visid_incap_321279=A6FcWS3AS16yv2G4U+cPjq4qklgAAAAAQUIPAAAAAABSOGLKYVCByrmhuuGgvz2K; __utma=43697952.1078009590.1494436041.1494436041.1494436041.1; __utmz=43697952.1494436041.1.1.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); PHPSESSID=ST-52609-ZmUT9IMIGJ2eUd9FEUMO-ssotayloredu; pycas=5ce720a01494617705:connor_wagner', '-H', 'Connection: keep-alive'], stdout=file)
 
@@ -495,14 +515,13 @@ class ControlWidgets(BoxLayout):
         # Create QuotaWidget object to display
         self.quotaWidget = QuotaWidget()
 
-        # Display popups
+        self.quotaWidget.loadDailyImage()
+        self.quotaWidget.loadWeeklyImage()
+
+        # Display popup
         self.popup = Popup(title="Quota Usage", content=self.quotaWidget)
         self.quotaWidget.closeButton.bind(on_press=self.popup.dismiss)
         self.popup.open()
-
-        # Refresh images and update progress bar appropriately
-        self.quotaWidget.loadDailyImage()
-        self.quotaWidget.loadWeeklyImage()
 
         self.quotaWidget.updateImageDisplays()
 
@@ -582,6 +601,170 @@ class PiDay(App):
 
     def build(self):
         return self.rootLayout
+
+    def on_start(self):
+        self.rootLayout.middlePane.calendarWidget.authenticate()
+
+# Helper classes and functions
+class LoadingIndicator(Popup):
+
+    def __init__(self, **kwargs):
+        super(LoadingIndicator, self).__init__(**kwargs)
+
+        self.progressBar = ProgressBar(max=1, value=0)
+        self.add_widget(self.progressBar)
+
+    def update(self, value):
+        self.progressBar.value = value
+
+class TwoFactorAuthScreen(Popup):
+
+    def __init__(self, calendarWidgetObject, **kwargs):
+        super(TwoFactorAuthScreen, self).__init__(**kwargs)
+
+        self.title = "Two Factor Authentication"
+
+        # Initialize variables
+        self.calendarWidgetObject = calendarWidgetObject
+
+        self.container = BoxLayout(orientation='vertical', spacing=15)
+        self.add_widget(self.container)
+
+        self.numberString = ""
+        self.numberDisplay = Label(text=self.numberString, halign='center', valign='center')
+        self.container.add_widget(self.numberDisplay)
+
+        # Configure each row of buttons
+        self.firstRow = BoxLayout(orientation='horizontal', spacing=15)
+
+        self.oneButton = Button(text='1', valign='center', halign='center')
+        self.oneButton.bind(on_press=self.oneButtonPress)
+        self.firstRow.add_widget(self.oneButton)
+
+        self.twoButton = Button(text='2', valign='center', halign='center')
+        self.twoButton.bind(on_press=self.twoButtonPress)
+        self.firstRow.add_widget(self.twoButton)
+
+        self.threeButton = Button(text='3', valign='center', halign='center')
+        self.threeButton.bind(on_press=self.threeButtonPress)
+        self.firstRow.add_widget(self.threeButton)
+
+        self.secondRow = BoxLayout(orientation='horizontal', spacing=15)
+
+        self.fourButton = Button(text='4', valign='center', halign='center')
+        self.fourButton.bind(on_press=self.fourButtonPress)
+        self.secondRow.add_widget(self.fourButton)
+
+        self.fiveButton = Button(text='5', valign='center', halign='center')
+        self.fiveButton.bind(on_press=self.fiveButtonPress)
+        self.secondRow.add_widget(self.fiveButton)
+
+        self.sixButton = Button(text='6', valign='center', halign='center')
+        self.sixButton.bind(on_press=self.sixButtonPress)
+        self.secondRow.add_widget(self.sixButton)
+
+        self.thirdRow = BoxLayout(orientation='horizontal', spacing=15)
+
+        self.sevenButton = Button(text='7', valign='center', halign='center')
+        self.sevenButton.bind(on_press=self.sevenButtonPress)
+        self.thirdRow.add_widget(self.sevenButton)
+
+        self.eightButton = Button(text='8', valign='center', halign='center')
+        self.eightButton.bind(on_press=self.eightButtonPress)
+        self.thirdRow.add_widget(self.eightButton)
+
+        self.nineButton = Button(text='9', valign='center', halign='center')
+        self.nineButton.bind(on_press=self.nineButtonPress)
+        self.thirdRow.add_widget(self.nineButton)
+
+        self.fourthRow = BoxLayout(orientation='horizontal', spacing=15)
+
+        self.enterButton = Button(text='Enter', valign='center', halign='center')
+        self.enterButton.bind(on_press=self.enterButtonPress)
+        self.fourthRow.add_widget(self.enterButton)
+
+        self.zeroButton = Button(text='0', valign='center', halign='center')
+        self.zeroButton.bind(on_press=self.zeroButtonPress)
+        self.fourthRow.add_widget(self.zeroButton)
+
+        self.deleteButton = Button(text='Delete', valign='center', halign='center')
+        self.deleteButton.bind(on_press=self.deleteButtonPress)
+        self.fourthRow.add_widget(self.deleteButton)
+
+        self.container.add_widget(self.firstRow)
+        self.container.add_widget(self.secondRow)
+        self.container.add_widget(self.thirdRow)
+        self.container.add_widget(self.fourthRow)
+
+        self.open()
+
+        self.promptForDevice()
+
+    def promptForDevice(self):
+        devicePrompt = "Your trusted devices are:\n"
+        devices = self.calendarWidgetObject.icloudApi.trusted_devices
+        for i, device in enumerate(devices):
+            devicePrompt += "[%d] %s\n" % (i, device.get('deviceName', "SMS to %s" % device.get('phoneNumber')))
+        devicePrompt += "Which device would you like to use?"
+        self.displayMessage(devicePrompt)
+
+        device = 0
+        device = devices[device]
+        if not self.calendarWidgetObject.icloudApi.send_verification_code(device):
+            self.displayMessage("Failed to send verification code")
+            time.sleep(3)
+            exit()
+
+        self.displayMessage('Please enter validation code')
+
+    def displayMessage(self, message):
+        self.numberDisplay.text = message
+
+    def oneButtonPress(self, *largs):
+        self.addDigitToString(1)
+
+    def twoButtonPress(self, *largs):
+        self.addDigitToString(2)
+
+    def threeButtonPress(self, *largs):
+        self.addDigitToString(3)
+
+    def fourButtonPress(self, *largs):
+        self.addDigitToString(4)
+
+    def fiveButtonPress(self, *largs):
+        self.addDigitToString(5)
+
+    def sixButtonPress(self, *largs):
+        self.addDigitToString(6)
+
+    def sevenButtonPress(self, *largs):
+        self.addDigitToString(7)
+
+    def eightButtonPress(self, *largs):
+        self.addDigitToString(8)
+
+    def nineButtonPress(self, *largs):
+        self.addDigitToString(9)
+
+    def zeroButtonPress(self, *largs):
+        self.addDigitToString(0)
+
+    def enterButtonPress(self, *largs):
+        if not self.icloudApi.validate_verification_code(self.device, self.numberString):
+            self.displayMessage("Failed to verify verification code")
+            time.sleep(3)
+            exit()
+        self.calendarWidgetObject.finishInitSetup()
+        self.dismiss()
+
+    def deleteButtonPress(self, *largs):
+        self.numberString = self.numberString[:-1]
+        self.numberDisplay.text = self.numberString
+
+    def addDigitToString(self, digit):
+        self.numberString += str(digit)
+        self.numberDisplay.text = self.numberString
 
 def getTimeToMidnight():
     now = datetime.now()
