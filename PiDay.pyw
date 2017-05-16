@@ -73,6 +73,10 @@ class QuoteWidget(BoxLayout):
         quote = makeHTTPRequest("http://ron-swanson-quotes.herokuapp.com/v2/quotes")
         quote = quote[1:-1] + "\n–Ron Swanson"
 
+        # If makeHTTPRequest returned False then there was an error, end the function
+        if not quote:
+            return
+
         # Update text on label
         self.quoteLabel.text = quote
 
@@ -116,6 +120,10 @@ class WeatherWidget(RelativeLayout):
         # Get current weather data and convert to dictionary from JSON
         currentJsonStr = makeHTTPRequest("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
         currentJsonDict = json.loads(currentJsonStr)
+
+        # If makeHTTPRequest returned False then there was an error, end the function
+        if not forecastJsonDict or not forecastJsonStr:
+            return
 
         # Get city name from dictionary
         city = currentJsonDict['name']
@@ -174,6 +182,11 @@ class StockWidget(RelativeLayout):
         for stockList in stocksListOfLists:
             # Get price for desired stock and add it to the string for the label
             price = makeHTTPRequest('http://finance.yahoo.com/d/quotes.csv?s=' + stockList[0] + '&f=l1')
+
+            # If makeHTTPRequest returns False then there was an error, end the function
+            if not price:
+                return
+
             pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
 
         # Remove trailing newline character
@@ -582,7 +595,7 @@ def makeHTTPRequest(url):
         response = r.read().decode('utf-8')
         r.close()
     except:
-        response = "Error retrieving data"
+        response = False
     return response
 
 # Start the program
