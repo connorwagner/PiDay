@@ -3,7 +3,9 @@ kivy.require('1.0.6')
 
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.uix.popup import Popup
 from kivy.uix.label import Label
+from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.relativelayout import RelativeLayout
@@ -412,6 +414,43 @@ class BrightnessWidgets(BoxLayout):
         with open('/sys/class/backlight/rpi_backlight/brightness', 'w') as brightnessFile:
             subprocess.call(['echo',str(brightness)],stdout=brightnessFile)
 
+class QuotaWidget(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(QuotaWidget, self).__init__(**kwargs)
+
+        # Configure QuotaWidget object
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        # Create container object so pictures are displayed side by side
+        self.container = BoxLayout(orientation='horizontal', spacing=15)
+        self.add_widget(self.container)
+
+        # Create variables for later use
+        self.dailyImage = None
+        self.weeklyImage = None
+        self.popup = None
+
+        # Add close button for popup
+        self.closeButton = Button(text="Close", halign='center', valign='center', size_hint=(1, 0.15))
+        self.add_widget(self.closeButton)
+
+    def updateImageDisplays(self):
+        self.dailyImage = Image(source='dailyQuota.png')
+        self.weeklyImage = Image(source='weeklyQuota.png')
+
+        self.container.add_widget(self.dailyImage)
+        self.container.add_widget(self.weeklyImage)
+
+    def loadDailyImage(self):
+        with open('PiDay-v2/dailyQuota.png', 'w') as file:
+            subprocess.call(['curl','http://quota.taylor.edu/cgi-bin/graph.py?range=daily', '-H', 'Host: quota.taylor.edu', '-H', 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:51.0) Gecko/20100101 Firefox/51.0', '-H', 'Accept: */*', '-H', 'Accept-Language: en-US,en;q=0.5', '--compressed', '-H', 'Referer: http://quota.taylor.edu/?login=y', '-H', 'Cookie: visid_incap_321279=A6FcWS3AS16yv2G4U+cPjq4qklgAAAAAQUIPAAAAAABSOGLKYVCByrmhuuGgvz2K; __utma=43697952.1078009590.1494436041.1494436041.1494436041.1; __utmz=43697952.1494436041.1.1.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); PHPSESSID=ST-52609-ZmUT9IMIGJ2eUd9FEUMO-ssotayloredu; pycas=5ce720a01494617705:connor_wagner', '-H', 'Connection: keep-alive'], stdout=file)
+
+    def loadWeeklyImage(self):
+        with open('PiDay-v2/weeklyQuota.png', 'w') as file:
+            subprocess.call(['curl', 'http://quota.taylor.edu/cgi-bin/graph.py?range=weekly', '-H', 'Host: quota.taylor.edu', '-H', 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:51.0) Gecko/20100101 Firefox/51.0', '-H', 'Accept: */*', '-H', 'Accept-Language: en-US,en;q=0.5', '--compressed', '-H', 'Referer: http://quota.taylor.edu/?login=y', '-H', 'Cookie: visid_incap_321279=A6FcWS3AS16yv2G4U+cPjq4qklgAAAAAQUIPAAAAAABSOGLKYVCByrmhuuGgvz2K; __utma=43697952.1078009590.1494436041.1494436041.1494436041.1; __utmz=43697952.1494436041.1.1.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); PHPSESSID=ST-52609-ZmUT9IMIGJ2eUd9FEUMO-ssotayloredu; pycas=5ce720a01494617705:connor_wagner', '-H', 'Connection: keep-alive'], stdout=file)
+
 class ControlWidgets(BoxLayout):
 
     def __init__(self, **kwargs):
@@ -421,16 +460,38 @@ class ControlWidgets(BoxLayout):
         self.orientation = 'vertical'
         self.spacing = 10
 
+        # Define variables for later use
+        self.quotaWidget = None
+        self.popup = None
+
         # Create widgets
         self.brightnessWidgets = BrightnessWidgets()
+        self.quotaButton = Button(text="View Quota", halign='center', valign='center', pos_hint={'x': 0, 'y': 1}, size_hint=(1, 0.25))
         self.exitButton = Button(text="Exit", halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 0.25))
 
-        # Configure exit button
+        # Configure buttons
+        self.quotaButton.bind(on_press=self.openQuotaWidget)
         self.exitButton.bind(on_press=exit)
 
         # Add widgets to view
         self.add_widget(self.brightnessWidgets)
+        self.add_widget(self.quotaButton)
         self.add_widget(self.exitButton)
+
+    def openQuotaWidget(self, *largs):
+        # Create QuotaWidget object to display
+        self.quotaWidget = QuotaWidget()
+
+        # Display popups
+        self.popup = Popup(title="Quota Usage", content=self.quotaWidget)
+        self.quotaWidget.closeButton.bind(on_press=self.popup.dismiss)
+        self.popup.open()
+
+        # Refresh images and update progress bar appropriately
+        self.quotaWidget.loadDailyImage()
+        self.quotaWidget.loadWeeklyImage()
+
+        self.quotaWidget.updateImageDisplays()
 
 class RightPane(BoxLayout):
 
