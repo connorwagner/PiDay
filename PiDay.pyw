@@ -401,17 +401,29 @@ class BrightnessWidgets(BoxLayout):
         self.orientation = 'vertical'
         self.spacing = 5
 
-        # Create buttons
-        self.darkScreenBtn = Button(text="Go Dark", halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 0.5))
-        self.brightScreenBtn = Button(text="Turn It Up", halign='center', valign='center', pos_hint={'x': 0, 'y': 0.5}, size_hint=(1, 0.5))
+        # Initialize variables
+        self.isDark = False
+        self.darkTitle = "Go Dark"
+        self.brightTitle = "Turn It Up"
 
-        # Configure buttons
-        self.darkScreenBtn.bind(on_press=self.darkScreen)
-        self.brightScreenBtn.bind(on_press=self.brightScreen)
+        # Create button
+        self.button = Button(text=self.darkTitle, halign='center', valign='center')
 
-        # Add buttons to view
-        self.add_widget(self.darkScreenBtn)
-        self.add_widget(self.brightScreenBtn)
+        # Configure button
+        self.button.bind(on_press=self.switchBrightness)
+
+        # Add button to view
+        self.add_widget(self.button)
+
+    def switchBrightness(self, *largs):
+        if self.isDark:
+            self.isDark = False
+            self.brightScreen()
+            self.button.text = self.darkTitle
+        else:
+            self.isDark = True
+            self.darkScreen()
+            self.button.text = self.brightTitle
 
     def darkScreen(self, *args):
         self.modifyBrightness(11)
@@ -499,8 +511,8 @@ class ControlWidgets(BoxLayout):
 
         # Create widgets
         self.brightnessWidgets = BrightnessWidgets()
-        self.quotaButton = Button(text="View Quota", halign='center', valign='center', pos_hint={'x': 0, 'y': 1}, size_hint=(1, 0.25))
-        self.exitButton = Button(text="Exit", halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 0.25))
+        self.quotaButton = Button(text="View Quota", halign='center', valign='center')
+        self.exitButton = Button(text="Exit", halign='center', valign='center')
 
         # Configure buttons
         self.quotaButton.bind(on_press=self.openQuotaWidget)
@@ -626,6 +638,7 @@ class TwoFactorAuthScreen(Popup):
 
         # Initialize variables
         self.calendarWidgetObject = calendarWidgetObject
+        self.device = None
 
         self.container = BoxLayout(orientation='vertical', spacing=15)
         self.add_widget(self.container)
@@ -708,9 +721,9 @@ class TwoFactorAuthScreen(Popup):
         devicePrompt += "Which device would you like to use?"
         self.displayMessage(devicePrompt)
 
-        device = 0
-        device = devices[device]
-        if not self.calendarWidgetObject.icloudApi.send_verification_code(device):
+        deviceNum = 0
+        self.device = devices[deviceNum]
+        if not self.calendarWidgetObject.icloudApi.send_verification_code(self.device):
             self.displayMessage("Failed to send verification code")
             time.sleep(3)
             exit()
@@ -751,7 +764,7 @@ class TwoFactorAuthScreen(Popup):
         self.addDigitToString(0)
 
     def enterButtonPress(self, *largs):
-        if not self.icloudApi.validate_verification_code(self.device, self.numberString):
+        if not self.calendarWidgetObject.icloudApi.validate_verification_code(self.device, self.numberString):
             self.displayMessage("Failed to verify verification code")
             time.sleep(3)
             exit()
