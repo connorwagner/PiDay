@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 import operator
 from pyicloud import PyiCloudService
 
-from config import getUsername, getPassword, getStocks, getWeatherLocale, getCalendarExceptions
+from config import getUsername, getPassword, getStocks, getWeatherLocale, getCalendarExceptions, getQuotaCurl
 
 class TimeWidget(RelativeLayout):
 
@@ -62,11 +62,11 @@ class QuoteWidget(BoxLayout):
         self.updateUI()
 
         # Set timer to update quote at midnight
-        Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
+        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
 
     def updateUIFirstTime(self, *largs):
         # Update quote every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        Clock.schedule_interval(self.updateUI, 86400)
+        self.recur = Clock.schedule_interval(self.updateUI, 86400)
         self.updateUI()
 
     def updateUI(self, *largs):
@@ -98,7 +98,7 @@ class WeatherWidget(RelativeLayout):
         self.weatherLabel = Label(text='Weather here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
 
         # Update weather every 15 minutes (15 minutes * 60 seconds = 900 seconds)
-        Clock.schedule_interval(self.updateWeather, 900)
+        self.recur = Clock.schedule_interval(self.updateWeather, 900)
 
         self.updateWeather()
 
@@ -170,7 +170,7 @@ class StockWidget(RelativeLayout):
         self.stockLabel = Label(text='Stocks here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
 
         # Update stock data every 5 minutes (5 minutes * 60 seconds = 300 seconds)
-        Clock.schedule_interval(self.updateStocks, 300)
+        self.recur = Clock.schedule_interval(self.updateStocks, 300)
 
         self.updateStocks()
 
@@ -215,13 +215,13 @@ class DaySelector(BoxLayout):
         self.calendarObject = calendarObject
 
         # Set timer to update quote at midnight
-        Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
+        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
 
         self.updateUI()
 
     def updateUIFirstTime(self, *largs):
         # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        Clock.schedule_interval(self.updateUI, 86400)
+        self.recur = Clock.schedule_interval(self.updateUI, 86400)
 
         print("DaySelector updateUIFirstTime running at", datetime.now())
 
@@ -309,6 +309,7 @@ class CalendarWidget(BoxLayout):
         self.twoFactorDone = False
         self.twoFactorScreen = None
         self.icloudApi = None
+        self.recur = None
 
         # Initialize data variables
         self.daySeparatedEventList = []
@@ -325,7 +326,7 @@ class CalendarWidget(BoxLayout):
         self.updateUI()
 
         # Set timer to update widget at midnight
-        Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
+        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
 
     def authenticate(self):
         self.icloudApi = PyiCloudService(getUsername(), getPassword())
@@ -336,16 +337,12 @@ class CalendarWidget(BoxLayout):
 
     def updateUIFirstTime(self, *largs):
         # Update widget every 30 minutes (30 minutes * 60 seconds = 1800 seconds)
-        Clock.schedule_interval(self.getData, 1800)
-
-        print("CalendarWidget updateUIFirstTime running at", datetime.now())
+        self.recur = Clock.schedule_interval(self.getData, 1800)
 
         self.getData()
 
     def getData(self, *largs):
         now = datetime.now()
-
-        print("CalendarWidget getData running at", datetime.now())
 
         # Get list of exceptions from config
         exceptions = getCalendarExceptions()
@@ -473,6 +470,31 @@ class QuotaWidget(BoxLayout):
         self.add_widget(self.container)
 
         # Create variables for later use
+        self.curlCall = []
+        curlStr = getQuotaCurl()
+        inQuotes = False
+        lastIndex = 0
+        for i in range(len(curlStr)):
+            if curlStr[i] == ' ':
+                if not inQuotes:
+                    newStr = curlStr[lastIndex:i].replace("'",'').strip()
+                    if len(newStr) > 0:
+                        self.curlCall.append(newStr)
+                    lastIndex = i + 1
+            if curlStr[i] == "'":
+                if inQuotes:
+                    inQuotes = False
+                    newStr = curlStr[lastIndex:i].replace("'",'').strip()
+                    if len(newStr) > 0:
+                        self.curlCall.append(newStr)
+                    lastIndex = i + 1
+                else:
+                    inQuotes = True
+                    lastIndex = i + 1
+        lastStr = curlStr[lastIndex:].strip()
+        if len(lastStr) > 0:
+            self.curlCall.append(lastStr)
+        self.workingDir = str(subprocess.check_output('pwd'))[2:-3]
         self.dailyImage = None
         self.weeklyImage = None
         self.popup = None
@@ -482,19 +504,23 @@ class QuotaWidget(BoxLayout):
         self.add_widget(self.closeButton)
 
     def updateImageDisplays(self):
-        self.dailyImage = Image(source='dailyQuota.png')
-        self.weeklyImage = Image(source='weeklyQuota.png')
+        self.dailyImage = Image(source='%s/dailyQuota.png' % self.workingDir)
+        self.weeklyImage = Image(source='%s/weeklyQuota.png' % self.workingDir)
 
         self.container.add_widget(self.dailyImage)
         self.container.add_widget(self.weeklyImage)
 
     def loadDailyImage(self, *largs):
-        with open('PiDay-v2/dailyQuota.png', 'w') as file:
-            subprocess.call(['curl','http://quota.taylor.edu/cgi-bin/graph.py?range=daily', '-H', 'Host: quota.taylor.edu', '-H', 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:51.0) Gecko/20100101 Firefox/51.0', '-H', 'Accept: */*', '-H', 'Accept-Language: en-US,en;q=0.5', '--compressed', '-H', 'Referer: http://quota.taylor.edu/?login=y', '-H', 'Cookie: visid_incap_321279=A6FcWS3AS16yv2G4U+cPjq4qklgAAAAAQUIPAAAAAABSOGLKYVCByrmhuuGgvz2K; __utma=43697952.1078009590.1494436041.1494436041.1494436041.1; __utmz=43697952.1494436041.1.1.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); PHPSESSID=ST-52609-ZmUT9IMIGJ2eUd9FEUMO-ssotayloredu; pycas=5ce720a01494617705:connor_wagner', '-H', 'Connection: keep-alive'], stdout=file)
+        dailyCurl = self.curlCall[:]
+        dailyCurl[1] += "daily"
+        with open('%s/dailyQuota.png' % self.workingDir, 'w') as file:
+            subprocess.call(dailyCurl, stdout=file)
 
     def loadWeeklyImage(self, *largs):
-        with open('PiDay-v2/weeklyQuota.png', 'w') as file:
-            subprocess.call(['curl', 'http://quota.taylor.edu/cgi-bin/graph.py?range=weekly', '-H', 'Host: quota.taylor.edu', '-H', 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:51.0) Gecko/20100101 Firefox/51.0', '-H', 'Accept: */*', '-H', 'Accept-Language: en-US,en;q=0.5', '--compressed', '-H', 'Referer: http://quota.taylor.edu/?login=y', '-H', 'Cookie: visid_incap_321279=A6FcWS3AS16yv2G4U+cPjq4qklgAAAAAQUIPAAAAAABSOGLKYVCByrmhuuGgvz2K; __utma=43697952.1078009590.1494436041.1494436041.1494436041.1; __utmz=43697952.1494436041.1.1.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); PHPSESSID=ST-52609-ZmUT9IMIGJ2eUd9FEUMO-ssotayloredu; pycas=5ce720a01494617705:connor_wagner', '-H', 'Connection: keep-alive'], stdout=file)
+        weeklyCurl = self.curlCall[:]
+        weeklyCurl[1] += "weekly"
+        with open('%s/weeklyQuota.png' % self.workingDir, 'w') as file:
+            subprocess.call(weeklyCurl, stdout=file)
 
 class ControlWidgets(BoxLayout):
 
@@ -796,4 +822,7 @@ def makeHTTPRequest(url):
 
 # Start the program
 if __name__ == "__main__":
-    PiDay().run()
+    # We need to keep a reference to the PiDay object so it is not garbage collected
+    # If the object is garbage collected then the schedule calls will not work
+    app = PiDay()
+    app.run()

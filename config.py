@@ -17,3 +17,7 @@ def getWeatherLocale():
 # Return a list of pGuid's of calendars that should not be displayed
 def getCalendarExceptions():
     return ['']
+
+# Return a curl command as a string
+def getQuotaCurl():
+    return ""
