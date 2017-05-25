@@ -48,6 +48,9 @@ class QuoteWidget(BoxLayout):
     def __init__(self, **kwargs):
         super(QuoteWidget, self).__init__(**kwargs)
 
+        # Initialize data variables
+        self.recur = None
+
         # Initialize label
         self.quoteLabel = Label(text='Quote here', halign='center', valign='center', max_lines=8)
 
@@ -61,6 +64,7 @@ class QuoteWidget(BoxLayout):
 
         self.updateUI()
 
+    def startTimer(self):
         # Set timer to update quote at midnight
         self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
 
@@ -93,17 +97,19 @@ class WeatherWidget(RelativeLayout):
 
         # Initialize data variables
         self.weatherString = ""
+        self.recur = None
 
         # Initialize label
         self.weatherLabel = Label(text='Weather here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
-
-        # Update weather every 15 minutes (15 minutes * 60 seconds = 900 seconds)
-        self.recur = Clock.schedule_interval(self.updateWeather, 900)
 
         self.updateWeather()
 
         # Add label to view
         self.add_widget(self.weatherLabel)
+
+    def startTimer(self):
+        # Update weather every 15 minutes (15 minutes * 60 seconds = 900 seconds)
+        self.recur = Clock.schedule_interval(self.updateWeather, 900)
 
     def updateWeather(self, *largs):
         # API key: 533616ff356c7a5963e935e12fbb9306
@@ -117,15 +123,16 @@ class WeatherWidget(RelativeLayout):
 
         # Get forecast data and convert to dictionary from JSON
         forecastJsonStr = makeHTTPRequest("http://api.openweathermap.org/data/2.5/forecast?q=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
-        forecastJsonDict = json.loads(forecastJsonStr)
 
         # Get current weather data and convert to dictionary from JSON
         currentJsonStr = makeHTTPRequest("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
-        currentJsonDict = json.loads(currentJsonStr)
 
         # If makeHTTPRequest returned False then there was an error, end the function
-        if not forecastJsonDict or not forecastJsonStr:
+        if not forecastJsonStr or not forecastJsonStr:
             return
+
+        forecastJsonDict = json.loads(forecastJsonStr)
+        currentJsonDict = json.loads(currentJsonStr)
 
         # Get city name from dictionary
         city = currentJsonDict['name']
@@ -165,17 +172,19 @@ class StockWidget(RelativeLayout):
 
         # Initialize data variables
         self.stockString = ""
+        self.recur = None
 
         # Initialize label
         self.stockLabel = Label(text='Stocks here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
-
-        # Update stock data every 5 minutes (5 minutes * 60 seconds = 300 seconds)
-        self.recur = Clock.schedule_interval(self.updateStocks, 300)
 
         self.updateStocks()
 
         # Add label to view
         self.add_widget(self.stockLabel)
+
+    def startTimer(self):
+        # Update stock data every 5 minutes (5 minutes * 60 seconds = 300 seconds)
+        self.recur = Clock.schedule_interval(self.updateStocks, 300)
 
     def updateStocks(self, *largs):
         # Get list of stocks desired from config file
@@ -213,11 +222,13 @@ class DaySelector(BoxLayout):
         self.dayAdjustment = int(time.strftime("%w"))
         self.selectedDay = 0
         self.calendarObject = calendarObject
-
-        # Set timer to update quote at midnight
-        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
+        self.recur = None
 
         self.updateUI()
+
+    def startTimer(self):
+        # Set timer to update quote at midnight
+        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
 
     def updateUIFirstTime(self, *largs):
         # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
@@ -325,6 +336,7 @@ class CalendarWidget(BoxLayout):
         # Add widgets to view
         self.updateUI()
 
+    def startTimer(self):
         # Set timer to update widget at midnight
         self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
 
@@ -338,6 +350,7 @@ class CalendarWidget(BoxLayout):
     def updateUIFirstTime(self, *largs):
         # Update widget every 30 minutes (30 minutes * 60 seconds = 1800 seconds)
         self.recur = Clock.schedule_interval(self.getData, 1800)
+        self.daySelector.startTimer()
 
         self.getData()
 
@@ -642,8 +655,12 @@ class PiDay(App):
 
     def on_start(self):
         self.rootLayout.middlePane.calendarWidget.authenticate()
+        self.rootLayout.leftPane.stockWidget.startTimer()
+        self.rootLayout.leftPane.weatherWidget.startTimer()
+        self.rootLayout.leftPane.quoteWidget.startTimer()
 
 # Helper classes and functions
+# TODO: Make this work
 class LoadingIndicator(Popup):
 
     def __init__(self, **kwargs):
@@ -655,6 +672,7 @@ class LoadingIndicator(Popup):
     def update(self, value):
         self.progressBar.value = value
 
+# TODO: Use functools.partial instead of multiple functions for button presses
 class TwoFactorAuthScreen(Popup):
 
     def __init__(self, calendarWidgetObject, **kwargs):
