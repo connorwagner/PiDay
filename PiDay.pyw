@@ -17,6 +17,7 @@ import json
 import urllib.request
 import subprocess
 from datetime import datetime, timedelta
+from functools import partial
 
 import operator
 from pyicloud import PyiCloudService
@@ -672,7 +673,6 @@ class LoadingIndicator(Popup):
     def update(self, value):
         self.progressBar.value = value
 
-# TODO: Use functools.partial instead of multiple functions for button presses
 class TwoFactorAuthScreen(Popup):
 
     def __init__(self, calendarWidgetObject, **kwargs):
@@ -695,43 +695,43 @@ class TwoFactorAuthScreen(Popup):
         self.firstRow = BoxLayout(orientation='horizontal', spacing=15)
 
         self.oneButton = Button(text='1', valign='center', halign='center')
-        self.oneButton.bind(on_press=self.oneButtonPress)
+        self.oneButton.bind(on_press=partial(self.numberPressed, 1))
         self.firstRow.add_widget(self.oneButton)
 
         self.twoButton = Button(text='2', valign='center', halign='center')
-        self.twoButton.bind(on_press=self.twoButtonPress)
+        self.twoButton.bind(on_press=partial(self.numberPressed, 2))
         self.firstRow.add_widget(self.twoButton)
 
         self.threeButton = Button(text='3', valign='center', halign='center')
-        self.threeButton.bind(on_press=self.threeButtonPress)
+        self.threeButton.bind(on_press=partial(self.numberPressed, 3))
         self.firstRow.add_widget(self.threeButton)
 
         self.secondRow = BoxLayout(orientation='horizontal', spacing=15)
 
         self.fourButton = Button(text='4', valign='center', halign='center')
-        self.fourButton.bind(on_press=self.fourButtonPress)
+        self.fourButton.bind(on_press=partial(self.numberPressed, 4))
         self.secondRow.add_widget(self.fourButton)
 
         self.fiveButton = Button(text='5', valign='center', halign='center')
-        self.fiveButton.bind(on_press=self.fiveButtonPress)
+        self.fiveButton.bind(on_press=partial(self.numberPressed, 5))
         self.secondRow.add_widget(self.fiveButton)
 
         self.sixButton = Button(text='6', valign='center', halign='center')
-        self.sixButton.bind(on_press=self.sixButtonPress)
+        self.sixButton.bind(on_press=partial(self.numberPressed, 6))
         self.secondRow.add_widget(self.sixButton)
 
         self.thirdRow = BoxLayout(orientation='horizontal', spacing=15)
 
         self.sevenButton = Button(text='7', valign='center', halign='center')
-        self.sevenButton.bind(on_press=self.sevenButtonPress)
+        self.sevenButton.bind(on_press=partial(self.numberPressed, 7))
         self.thirdRow.add_widget(self.sevenButton)
 
         self.eightButton = Button(text='8', valign='center', halign='center')
-        self.eightButton.bind(on_press=self.eightButtonPress)
+        self.eightButton.bind(on_press=partial(self.numberPressed, 8))
         self.thirdRow.add_widget(self.eightButton)
 
         self.nineButton = Button(text='9', valign='center', halign='center')
-        self.nineButton.bind(on_press=self.nineButtonPress)
+        self.nineButton.bind(on_press=partial(self.numberPressed, 9))
         self.thirdRow.add_widget(self.nineButton)
 
         self.fourthRow = BoxLayout(orientation='horizontal', spacing=15)
@@ -741,7 +741,7 @@ class TwoFactorAuthScreen(Popup):
         self.fourthRow.add_widget(self.enterButton)
 
         self.zeroButton = Button(text='0', valign='center', halign='center')
-        self.zeroButton.bind(on_press=self.zeroButtonPress)
+        self.zeroButton.bind(on_press=partial(self.numberPressed, 0))
         self.fourthRow.add_widget(self.zeroButton)
 
         self.deleteButton = Button(text='Delete', valign='center', halign='center')
@@ -777,35 +777,8 @@ class TwoFactorAuthScreen(Popup):
     def displayMessage(self, message):
         self.numberDisplay.text = message
 
-    def oneButtonPress(self, *largs):
-        self.addDigitToString(1)
-
-    def twoButtonPress(self, *largs):
-        self.addDigitToString(2)
-
-    def threeButtonPress(self, *largs):
-        self.addDigitToString(3)
-
-    def fourButtonPress(self, *largs):
-        self.addDigitToString(4)
-
-    def fiveButtonPress(self, *largs):
-        self.addDigitToString(5)
-
-    def sixButtonPress(self, *largs):
-        self.addDigitToString(6)
-
-    def sevenButtonPress(self, *largs):
-        self.addDigitToString(7)
-
-    def eightButtonPress(self, *largs):
-        self.addDigitToString(8)
-
-    def nineButtonPress(self, *largs):
-        self.addDigitToString(9)
-
-    def zeroButtonPress(self, *largs):
-        self.addDigitToString(0)
+    def numberPressed(self, num):
+        self.addDigitToString(num)
 
     def enterButtonPress(self, *largs):
         if not self.calendarWidgetObject.icloudApi.validate_verification_code(self.device, self.numberString):
