@@ -193,11 +193,16 @@ class StockWidget(RelativeLayout):
         pricesStr = str()
         for stockList in stocksListOfLists:
             # Get price for desired stock and add it to the string for the label
-            price = makeHTTPRequest('http://finance.yahoo.com/d/quotes.csv?s=' + stockList[0] + '&f=l1')
+            jsonData = makeHTTPRequest('https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&interval=5min&outputsize=compact&symbol=' + stockList[0] + '&apikey=DBC2MS0TUABOLZ04')
 
             # If makeHTTPRequest returns False then there was an error, end the function
-            if not price:
-                return
+            if not jsonData:
+                pricesStr = "Error retrieving data "
+                break
+
+            data = json.loads(jsonData)
+            mostRecentUpdate = data['Meta Data']['3. Last Refreshed']
+            price = data['Time Series (5min)'][mostRecentUpdate]['4. close']
 
             pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
 
