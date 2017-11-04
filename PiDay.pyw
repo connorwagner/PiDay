@@ -33,8 +33,8 @@ class TimeWidget(RelativeLayout):
         self.timeLabel = Label(text='12:34 AP', font_size='42', halign='center', valign='center', pos_hint={'x': 0, 'y': 0.25}, size_hint=(1, 0.8))
         self.dateLabel = Label(text='Month 12', font_size='20', halign='center', valign='center', pos_hint={'x': 0, 'y': 0.2}, size_hint=(1, 0.2))
 
-        # Update clock every 0.1 second
-        Clock.schedule_interval(self.updateTime, 0.1)
+        # Update clock every 30 seconds
+        Clock.schedule_interval(self.updateTime, 30)
 
         # Add labels to view
         self.add_widget(self.timeLabel)
@@ -552,7 +552,7 @@ class ControlWidgets(BoxLayout):
 
         # Configure buttons
         self.quotaButton.bind(on_press=self.openQuotaWidget)
-        self.exitButton.bind(on_press=exit)
+        self.exitButton.bind(on_press=quitProg)
 
         # Add widgets to view
         self.add_widget(self.brightnessWidgets)
@@ -812,8 +812,15 @@ def makeHTTPRequest(url):
         response = False
     return response
 
+def quitProg(*largs):
+    workingDir = str(subprocess.check_output('pwd'))[2:-3]
+    subprocess.call(['rm', '%s/dailyQuota.png' % workingDir, '%s/weeklyQuota.png' % workingDir])
+    quit()
+
 # Start the program
 if __name__ == "__main__":
+    subprocess.call(['sudo', 'chmod', '666', '/sys/class/backlight/rpi_backlight/brightness'])
+
     # We need to keep a reference to the PiDay object so it is not garbage collected
     # If the object is garbage collected then the schedule calls will not work
     app = PiDay()
