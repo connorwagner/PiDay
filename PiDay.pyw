@@ -235,14 +235,10 @@ class DaySelector(BoxLayout):
         # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
         self.recur = Clock.schedule_interval(self.updateUI, 86400)
 
-        print("DaySelector updateUIFirstTime running at", datetime.now())
-
         self.updateUI()
 
     def updateUI(self, *largs):
         self.dayAdjustment = int(time.strftime("%w"))
-
-        print("DaySelector updateUI running at", datetime.now())
 
         # Remove all existing widgets
         for child in self.children:
@@ -656,6 +652,11 @@ class PiDay(App):
 
     def on_start(self):
         self.rootLayout.middlePane.calendarWidget.authenticate()
+
+        self.root_window.bind(on_show=self.startMidnightTimers)
+
+    def startMidnightTimers(self):
+        print("Running")
         self.rootLayout.leftPane.stockWidget.startTimer()
         self.rootLayout.leftPane.weatherWidget.startTimer()
         self.rootLayout.leftPane.quoteWidget.startTimer()
@@ -777,7 +778,7 @@ class TwoFactorAuthScreen(Popup):
     def displayMessage(self, message):
         self.numberDisplay.text = message
 
-    def numberPressed(self, num):
+    def numberPressed(self, num, *largs):
         self.addDigitToString(num)
 
     def enterButtonPress(self, *largs):
