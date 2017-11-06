@@ -7,6 +7,9 @@
 	* `pip3 install schedule`
     * `sudo sudo add-apt-repository ppa:kivy-team/kivy`
     * `sudo apt-get install -y python3-kivy`
+        * Once kivy installs, add the following lines to `~/.kivy/config.ini` under the `[input]` section.
+            * `mtdev_%(name)s = probesysfs<Plug>PeepOpenrovider=mtdev`
+            * `hid_%(name)s = probesysfs<Plug>PeepOpenrovider=hidinput`
 2. All necessary modifications will be made within config.py
 	* `getUsername` should be modified to return your iCloud login email
 	* `getPassword` should be modified to return your iCloud login password
