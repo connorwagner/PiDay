@@ -5,8 +5,8 @@
 1. Install the pyicloud and schedule modules
 	* `pip3 install pyicloud`
 	* `pip3 install schedule`
-	* `sudo apt install -y python-pip build-essential git python python-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev`
-    * `sudo apt install -y python3-kivy`
+    * `sudo sudo add-apt-repository ppa:kivy-team/kivy`
+    * `sudo apt-get install -y python3-kivy`
 2. All necessary modifications will be made within config.py
 	* `getUsername` should be modified to return your iCloud login email
 	* `getPassword` should be modified to return your iCloud login password
