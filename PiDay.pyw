@@ -92,6 +92,21 @@ class QuoteWidget(BoxLayout):
         self.quoteLabel.pos_hint = {'x': 0, 'y': self.quoteLabel.height + .5}
         self.size = (self.quoteLabel.width, self.quoteLabel.height)
 
+class GamesWidget(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(GamesWidget, self).__init__(**kwargs)
+
+        self.orientation = 'vertical'
+        self.spacing = 5
+
+        self.button = Button(text="Games", halign='center', valign='center')
+
+        #self.button.bind(on_press=self.)
+
+        self.add_widget(self.button)
+
+
 class WeatherWidget(RelativeLayout):
 
     def __init__(self, **kwargs):
@@ -511,7 +526,7 @@ class BrightnessWidgets(BoxLayout):
         # Initialize variables
         self.isDark = False
         self.darkTitle = "Go Dark"
-        self.brightTitle = "Turn It Up"
+        self.brightTitle = "Go Bright"
 
         # Create button
         self.button = Button(text=self.darkTitle, halign='center', valign='center')
@@ -647,6 +662,7 @@ class ControlWidgets(BoxLayout):
 
         # Create widgets
         self.brightnessWidgets = BrightnessWidgets()
+        self.gameWidget = GamesWidget();
         self.quotaButton = Button(text="View Quota", halign='center', valign='center')
         self.exitButton = Button(text="Exit", halign='center', valign='center')
 
@@ -655,6 +671,7 @@ class ControlWidgets(BoxLayout):
         self.exitButton.bind(on_press=quitProg)
 
         # Add widgets to view
+        self.add_widget(self.gameWidget)
         self.add_widget(self.brightnessWidgets)
         self.add_widget(self.quotaButton)
         self.add_widget(self.exitButton)
