@@ -641,10 +641,11 @@ class GamesWidget(RelativeLayout):
         self.spacing = 5
 
         self.closeButton = Button(text="Close", halign='center', valign='center', size_hint=(1, 0.15))
-
         self.container = BoxLayout(orientation='horizontal', spacing=15)
-        self.add_widget(self.container)
+        self.container.othelloButton = Button(text="Othello", halign='left', valign='center')
 
+        self.container.add_widget(self.container.othelloButton)
+        self.add_widget(self.container)
         self.add_widget(self.closeButton)
 
 class ControlWidgets(BoxLayout):
