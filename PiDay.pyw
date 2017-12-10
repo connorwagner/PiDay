@@ -101,13 +101,9 @@ class GamesWidget(RelativeLayout):
         self.spacing = 5
 
         self.button = Button(text="Games", halign='center', valign='center')
-
-        self.popup = Popup(title="Games Selection")
-
-        self.button.bind(on_press=self.popup.open())
+        self.closeButton = Button(text="Close", halign='center', valign='center', size_hint=(1, 0.15))
 
         self.add_widget(self.button)
-
 
 class WeatherWidget(RelativeLayout):
 
@@ -671,6 +667,7 @@ class ControlWidgets(BoxLayout):
         # Configure buttons
         self.quotaButton.bind(on_press=self.openQuotaWidget)
         self.exitButton.bind(on_press=quitProg)
+        self.gameWidget.button.bind(on_press=self.openGamesWidget)
 
         # Add widgets to view
 
@@ -678,6 +675,14 @@ class ControlWidgets(BoxLayout):
         self.add_widget(self.quotaButton)
         self.add_widget(self.gameWidget)
         self.add_widget(self.exitButton)
+
+    def openGamesWidget(self, *largs):
+        self.gameWidget = GamesWidget()
+
+        self.popup = Popup(title="Games Selection", content=self.gameWidget)
+        self.gameWidget.closeButton.bind(on_press=self.popup.dismiss)
+
+        self.popup.open()
 
     def openQuotaWidget(self, *largs):
         # Create QuotaWidget object to display
