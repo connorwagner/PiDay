@@ -92,19 +92,6 @@ class QuoteWidget(BoxLayout):
         self.quoteLabel.pos_hint = {'x': 0, 'y': self.quoteLabel.height + .5}
         self.size = (self.quoteLabel.width, self.quoteLabel.height)
 
-class GamesWidget(RelativeLayout):
-
-    def __init__(self, **kwargs):
-        super(GamesWidget, self).__init__(**kwargs)
-
-        self.orientation = 'vertical'
-        self.spacing = 5
-
-        self.button = Button(text="Games", halign='center', valign='center')
-        self.closeButton = Button(text="Close", halign='center', valign='center', size_hint=(1, 0.15))
-
-        self.add_widget(self.button)
-
 class WeatherWidget(RelativeLayout):
 
     def __init__(self, **kwargs):
@@ -645,6 +632,21 @@ class QuotaWidget(BoxLayout):
         with open('%s/weeklyQuota.png' % self.workingDir, 'w') as file:
             subprocess.call(weeklyCurl, stdout=file)
 
+class GamesWidget(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(GamesWidget, self).__init__(**kwargs)
+
+        self.orientation = 'vertical'
+        self.spacing = 5
+
+        self.closeButton = Button(text="Close", halign='center', valign='center', size_hint=(1, 0.15))
+
+        self.container = BoxLayout(orientation='horizontal', spacing=15)
+        self.add_widget(self.container)
+
+        self.add_widget(self.closeButton)
+
 class ControlWidgets(BoxLayout):
 
     def __init__(self, **kwargs):
@@ -660,20 +662,20 @@ class ControlWidgets(BoxLayout):
 
         # Create widgets
         self.brightnessWidgets = BrightnessWidgets()
-        self.gameWidget = GamesWidget();
+        self.gameButton = Button(text="Games", halign='center', valign='center')
         self.quotaButton = Button(text="View Quota", halign='center', valign='center')
         self.exitButton = Button(text="Exit", halign='center', valign='center')
 
         # Configure buttons
         self.quotaButton.bind(on_press=self.openQuotaWidget)
         self.exitButton.bind(on_press=quitProg)
-        self.gameWidget.button.bind(on_press=self.openGamesWidget)
+        self.gameButton.bind(on_press=self.openGamesWidget)
 
         # Add widgets to view
 
         self.add_widget(self.brightnessWidgets)
         self.add_widget(self.quotaButton)
-        self.add_widget(self.gameWidget)
+        self.add_widget(self.gameButton)
         self.add_widget(self.exitButton)
 
     def openGamesWidget(self, *largs):
