@@ -102,7 +102,9 @@ class GamesWidget(RelativeLayout):
 
         self.button = Button(text="Games", halign='center', valign='center')
 
-        #self.button.bind(on_press=self.)
+        self.popup = Popup(title="Games Selection")
+
+        self.button.bind(on_press=self.popup.open())
 
         self.add_widget(self.button)
 
@@ -671,9 +673,10 @@ class ControlWidgets(BoxLayout):
         self.exitButton.bind(on_press=quitProg)
 
         # Add widgets to view
-        self.add_widget(self.gameWidget)
+
         self.add_widget(self.brightnessWidgets)
         self.add_widget(self.quotaButton)
+        self.add_widget(self.gameWidget)
         self.add_widget(self.exitButton)
 
     def openQuotaWidget(self, *largs):
