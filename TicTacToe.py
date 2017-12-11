@@ -6,7 +6,7 @@ class TicTacToe:
     def __init__(self):
         self.gameBoard = []
         self.spotsUsed = 0
-        self.recentState = -1
+        self.recentState = 1
         self.recentCol = 0
         self.recentRow = 0
         self.winner = -1
@@ -26,9 +26,9 @@ class TicTacToe:
 
     def whoseTurn(self):
         if self.getNumSpotsLeft() % 2 == 0:
-            return 1
-        else:
             return 2
+        else:
+            return 1
 
     def isValidMove(self, string):
         if string.isdigit() and len(string) == 2 and (int(string[0]) >= 0 and int(string[0]) <= 2) and (
@@ -148,41 +148,23 @@ class TicTacToe:
             return True
         return False
 
-    def playerMove(self):
-        if self.whoseTurn() == 1:
-            move = input("Player One's move: ")
+    def playerMove(self, state):
+        move = input("Player " + str(state) + "'s move: ")
+        while (not self.isValidMove(move)):
+            print("Invalid move. Try again!")
+            move = input("Player " + str(state) + "'s move: ")
+        row = int(move[0])
+        col = int(move[1])
+        while (self.getSpotState(row, col) != 0):
+            print("Spot already taken. Try again!")
+            move = input("Player " + str(state) + "'s move: ")
             while (not self.isValidMove(move)):
                 print("Invalid move. Try again!")
-                move = input("Player One's move: ")
+                move = input("Player " + str(state) + "'s move: ")
             row = int(move[0])
             col = int(move[1])
-            while (self.getSpotState(row, col) != 0):
-                print("Spot already taken. Try again!")
-                move = input("Player One's move: ")
-                while (not self.isValidMove(move)):
-                    print("Invalid move. Try again!")
-                    move = input("Player One's move: ")
-                row = int(move[0])
-                col = int(move[1])
-            self.setSpotState(row, col, 1)
-            self.setMostRecent(row, col, 1)
-        else:
-            move = input("Player Two's move: ")
-            while (not self.isValidMove(move)):
-                print("Invalid move. Try again!")
-                move = input("Player Two's move: ")
-            row = int(move[0])
-            col = int(move[1])
-            while (self.getSpotState(row, col) != 0):
-                print("Spot already taken. Try again!")
-                move = input("Player Two's move: ")
-                while (not self.isValidMove(move)):
-                    print("Invalid move. Try again!")
-                    move = input("Player One's move: ")
-                row = int(move[0])
-                col = int(move[1])
-            self.setSpotState(row, col, 2)
-            self.setMostRecent(row, col, 2)
+        self.setSpotState(row, col, state)
+        self.setMostRecent(row, col, state)
 
     def setMostRecent(self, row, col, state):
         self.recentState = state
@@ -199,7 +181,7 @@ class TicTacToe:
             if (self.getNumSpotsLeft() == 0):
                 print("Draw!!")
                 return
-            self.playerMove()
+            self.playerMove(self.whoseTurn())
             self.displayBoard()
         print("Player " + str(self.winner) + " Wins!!")
 

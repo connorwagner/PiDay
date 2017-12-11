@@ -47,41 +47,23 @@ class Othello:
         else:
             return 2
 
-    def playerMove(self):
-        if self.whoseTurn() == 1:
-            move = input("Player One's move: ")
+    def playerMove(self, state):
+        move = input("Player " + str(state) + "'s move: ")
+        while (not self.isValidMove(move)):
+            print("Invalid move. Try again!")
+            move = input("Player " + str(state) + "'s move: ")
+        row = int(move[0])
+        col = int(move[1])
+        while (self.getSpotState(row, col) != 0):
+            print("Spot already taken. Try again!")
+            move = input("Player " + str(state) + "'s move: ")
             while (not self.isValidMove(move)):
                 print("Invalid move. Try again!")
-                move = input("Player One's move: ")
+                move = input("Player " + str(state) + "'s move: ")
             row = int(move[0])
             col = int(move[1])
-            while (self.getSpotState(row, col) != 0):
-                print("Spot already taken. Try again!")
-                move = input("Player One's move: ")
-                while (not self.isValidMove(move)):
-                    print("Invalid move. Try again!")
-                    move = input("Player One's move: ")
-                row = int(move[0])
-                col = int(move[1])
-            self.checkForSwaps(row, col, 1)
-            self.setSpotState(row, col, 1)
-        else:
-            move = input("Player Two's move: ")
-            while (not self.isValidMove(move)):
-                print("Invalid move. Try again!")
-                move = input("Player Two's move: ")
-            row = int(move[0])
-            col = int(move[1])
-            while (self.getSpotState(row, col) != 0):
-                print("Spot already taken. Try again!")
-                move = input("Player Two's move: ")
-                while (not self.isValidMove(move)):
-                    print("Invalid move. Try again!")
-                    move = input("Player Two's move: ")
-                row = int(move[0])
-                col = int(move[1])
-            self.checkForSwaps(row, col, 2)
-            self.setSpotState(row, col, 2)
+        self.checkForSwaps(row, col, state)
+        self.setSpotState(row, col, state)
 
     def checkForSwaps(self, row, col, state):
         self.checkDownForSwaps(row, col, state)
@@ -235,9 +217,9 @@ class Othello:
     def gameControl(self):
         print("Enter your moves in the format of rowCol. Ex: '12' is row 1, column 2")
         while (not self.isWinner()):
-            self.playerMove()
+            self.playerMove(self.whoseTurn())
             self.displayBoard()
-        self.whoWon()
+        print(self.whoWon())
 
 
 othello = Othello()

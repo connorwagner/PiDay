@@ -644,7 +644,9 @@ class GamesWidget(RelativeLayout):
         self.container = BoxLayout(orientation='horizontal', spacing=15)
         self.container.othelloButton = Button(text="Othello", halign='center', valign='center')
         self.container.connectFourButton = Button(text="Connect Four", halign='center', valign='center')
+        self.container.tttButton = Button(text="TicTacToe", halign='center', valign='center')
 
+        self.container.add_widget(self.container.tttButton)
         self.container.add_widget(self.container.connectFourButton)
         self.container.add_widget(self.container.othelloButton)
         self.add_widget(self.container)

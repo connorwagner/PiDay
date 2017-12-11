@@ -161,37 +161,21 @@ class ConnectFour:
         else:
             return False
 
-    def playerMove(self):
-        if self.whoseTurn() == 1:
-            move = input("Player One's move: ")
+    def playerMove(self, state):
+        move = input("Player " + str(state) + "'s move: ")
+        while (not self.isValidMove(move)):
+            print("Invalid move. Try again!")
+            move = input("Player " + str(state) + "'s move: ")
+        col = int(move[0])
+        while (self.getSpotState(0, col) != 0):
+            print("Column is already full! Try again!")
+            move = input("Player " + str(state) + "'s move: ")
             while (not self.isValidMove(move)):
                 print("Invalid move. Try again!")
-                move = input("Player One's move: ")
+                move = input("Player " + str(state) + "'s move: ")
             col = int(move[0])
-            while (self.getSpotState(0, col) != 0):
-                print("Column is already full! Try again!")
-                move = input("Player One's move: ")
-                while (not self.isValidMove(move)):
-                    print("Invalid move. Try again!")
-                    move = input("Player One's move: ")
-                col = int(move[0])
-            self.setSpotState(col, 1)
-            self.setMostRecent(col, 1)
-        else:
-            move = input("Player Two's move: ")
-            while (not self.isValidMove(move)):
-                print("Invalid move. Try again!")
-                move = input("Player Two's move: ")
-            col = int(move[0])
-            while (self.getSpotState(0, col) != 0):
-                print("Column is already full! Try again!")
-                move = input("Player Two's move: ")
-                while (not self.isValidMove(move)):
-                    print("Invalid move. Try again!")
-                    move = input("Player Two's move: ")
-                col = int(move[0])
-            self.setSpotState(col, 2)
-            self.setMostRecent(col, 2)
+        self.setSpotState(col, state)
+        self.setMostRecent(col, state)
 
     def setMostRecent(self, col, state):
         self.recentState = state
@@ -207,7 +191,7 @@ class ConnectFour:
             if (self.getNumSpotsLeft() == 0):
                 print("Draw!!")
                 return
-            self.playerMove()
+            self.playerMove(self.whoseTurn())
             self.displayBoard()
         print("Player " + str(self.winner) + " Wins!!")
 
