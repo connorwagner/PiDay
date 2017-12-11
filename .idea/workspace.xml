@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7e1a276a-6b3d-4301-b986-df12ca0e067f" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PiDay.pyw" afterPath="$PROJECT_DIR$/PiDay.pyw" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ConnectFour.py" afterPath="$PROJECT_DIR$/ConnectFour.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Othello.py" afterPath="$PROJECT_DIR$/Othello.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -14,11 +16,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="PiDay.pyw" pinned="false" current-in-tab="true">
+      <file leaf-file-name="PiDay.pyw" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/PiDay.pyw">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="504">
-              <caret line="550" column="102" lean-forward="false" selection-start-line="550" selection-start-column="102" selection-end-line="550" selection-end-column="102" />
+            <state relative-caret-position="748">
+              <caret line="539" column="34" lean-forward="false" selection-start-line="539" selection-start-column="34" selection-end-line="539" selection-end-column="34" />
               <folding>
                 <element signature="e#748#1502#0" expanded="false" />
                 <element signature="e#786#1356#0" expanded="false" />
@@ -70,6 +72,8 @@
                 <element signature="e#19394#19647#0" expanded="false" />
                 <element signature="e#19695#19878#0" expanded="false" />
                 <element signature="e#19927#20115#0" expanded="false" />
+                <element signature="e#20157#20895#0" expanded="false" />
+                <element signature="e#20935#22668#0" expanded="false" />
                 <element signature="e#20973#21955#0" expanded="false" />
                 <element signature="e#22259#22668#0" expanded="false" />
                 <element signature="e#22703#23033#0" expanded="false" />
@@ -105,11 +109,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Othello.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Othello.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Othello.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state relative-caret-position="51">
+              <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -118,8 +122,8 @@
       <file leaf-file-name="ConnectFour.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ConnectFour.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state relative-caret-position="3349">
+              <caret line="197" column="0" lean-forward="true" selection-start-line="197" selection-start-column="0" selection-end-line="197" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -150,9 +154,9 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
+        <option value="$PROJECT_DIR$/PiDay.pyw" />
         <option value="$PROJECT_DIR$/ConnectFour.py" />
         <option value="$PROJECT_DIR$/Othello.py" />
-        <option value="$PROJECT_DIR$/PiDay.pyw" />
       </list>
     </option>
   </component>
@@ -183,8 +187,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -199,6 +201,8 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -473,6 +477,123 @@
             <element signature="e#19394#19647#0" expanded="false" />
             <element signature="e#19695#19878#0" expanded="false" />
             <element signature="e#19927#20115#0" expanded="false" />
+            <element signature="e#20157#20895#0" expanded="false" />
+            <element signature="e#20935#22668#0" expanded="false" />
+            <element signature="e#20973#21955#0" expanded="false" />
+            <element signature="e#22259#22668#0" expanded="false" />
+            <element signature="e#22703#23033#0" expanded="false" />
+            <element signature="e#22741#23033#0" expanded="false" />
+            <element signature="e#23069#23399#0" expanded="false" />
+            <element signature="e#23107#23399#0" expanded="false" />
+            <element signature="e#23433#24004#0" expanded="false" />
+            <element signature="e#23471#24004#0" expanded="false" />
+            <element signature="e#24045#24564#0" expanded="false" />
+            <element signature="e#24083#24564#0" expanded="false" />
+            <element signature="e#24589#25193#0" expanded="false" />
+            <element signature="e#24627#24746#0" expanded="false" />
+            <element signature="e#24777#24799#0" expanded="false" />
+            <element signature="e#24833#24954#0" expanded="false" />
+            <element signature="e#24999#25191#0" expanded="false" />
+            <element signature="e#25283#25536#0" expanded="false" />
+            <element signature="e#25321#25467#0" expanded="false" />
+            <element signature="e#25506#25536#0" expanded="false" />
+            <element signature="e#25577#30636#0" expanded="false" />
+            <element signature="e#25637#29114#0" expanded="false" />
+            <element signature="e#29155#29857#0" expanded="false" />
+            <element signature="e#29906#29939#0" expanded="false" />
+            <element signature="e#29991#30017#0" expanded="false" />
+            <element signature="e#30067#30359#0" expanded="false" />
+            <element signature="e#30410#30504#0" expanded="false" />
+            <element signature="e#30553#30636#0" expanded="false" />
+            <element signature="e#30667#30809#0" expanded="false" />
+            <element signature="e#30841#31022#0" expanded="false" />
+            <element signature="e#31050#31212#0" expanded="false" />
+            <element signature="e#31265#31552#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Othello.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ConnectFour.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PiDay.pyw">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#748#1502#0" expanded="false" />
+            <element signature="e#786#1356#0" expanded="false" />
+            <element signature="e#1400#1502#0" expanded="false" />
+            <element signature="e#1539#3191#0" expanded="false" />
+            <element signature="e#2266#2391#0" expanded="false" />
+            <element signature="e#2442#2615#0" expanded="false" />
+            <element signature="e#2657#3191#0" expanded="false" />
+            <element signature="e#3235#6696#0" expanded="false" />
+            <element signature="e#3273#3677#0" expanded="false" />
+            <element signature="e#3713#3856#0" expanded="false" />
+            <element signature="e#3903#6619#0" expanded="false" />
+            <element signature="e#6653#6696#0" expanded="false" />
+            <element signature="e#6738#8460#0" expanded="false" />
+            <element signature="e#6776#7170#0" expanded="false" />
+            <element signature="e#7206#7349#0" expanded="false" />
+            <element signature="e#7395#8387#0" expanded="false" />
+            <element signature="e#8421#8460#0" expanded="false" />
+            <element signature="e#8497#10299#0" expanded="false" />
+            <element signature="e#8551#8974#0" expanded="false" />
+            <element signature="e#9010#9135#0" expanded="false" />
+            <element signature="e#9186#9361#0" expanded="false" />
+            <element signature="e#9403#10074#0" expanded="false" />
+            <element signature="e#10122#10236#0" expanded="false" />
+            <element signature="e#10276#10299#0" expanded="false" />
+            <element signature="e#10343#11711#0" expanded="false" />
+            <element signature="e#10388#10776#0" expanded="false" />
+            <element signature="e#10818#11711#0" expanded="false" />
+            <element signature="e#11751#15460#0" expanded="false" />
+            <element signature="e#11789#12337#0" expanded="false" />
+            <element signature="e#12378#12475#0" expanded="false" />
+            <element signature="e#12511#12637#0" expanded="false" />
+            <element signature="e#12675#12887#0" expanded="false" />
+            <element signature="e#12938#13138#0" expanded="false" />
+            <element signature="e#13179#14820#0" expanded="false" />
+            <element signature="e#14862#15460#0" expanded="false" />
+            <element signature="e#15503#17623#0" expanded="false" />
+            <element signature="e#15541#16094#0" expanded="false" />
+            <element signature="e#16144#16392#0" expanded="false" />
+            <element signature="e#16172#16269#0" expanded="false" />
+            <element signature="e#16435#16460#0" expanded="false" />
+            <element signature="e#16500#16751#0" expanded="false" />
+            <element signature="e#16791#17051#0" expanded="false" />
+            <element signature="e#17096#17122#0" expanded="false" />
+            <element signature="e#17161#17342#0" expanded="false" />
+            <element signature="e#17396#17623#0" expanded="false" />
+            <element signature="e#17660#20115#0" expanded="false" />
+            <element signature="e#17698#19349#0" expanded="false" />
+            <element signature="e#19394#19647#0" expanded="false" />
+            <element signature="e#19695#19878#0" expanded="false" />
+            <element signature="e#19927#20115#0" expanded="false" />
+            <element signature="e#20157#20895#0" expanded="false" />
+            <element signature="e#20935#22668#0" expanded="false" />
             <element signature="e#20973#21955#0" expanded="false" />
             <element signature="e#22259#22668#0" expanded="false" />
             <element signature="e#22703#23033#0" expanded="false" />
@@ -586,6 +707,8 @@
             <element signature="e#19394#19647#0" expanded="false" />
             <element signature="e#19695#19878#0" expanded="false" />
             <element signature="e#19927#20115#0" expanded="false" />
+            <element signature="e#20157#20895#0" expanded="false" />
+            <element signature="e#20935#22668#0" expanded="false" />
             <element signature="e#20973#21955#0" expanded="false" />
             <element signature="e#22259#22668#0" expanded="false" />
             <element signature="e#22703#23033#0" expanded="false" />
@@ -691,6 +814,8 @@
             <element signature="e#19394#19647#0" expanded="false" />
             <element signature="e#19695#19878#0" expanded="false" />
             <element signature="e#19927#20115#0" expanded="false" />
+            <element signature="e#20157#20895#0" expanded="false" />
+            <element signature="e#20935#22668#0" expanded="false" />
             <element signature="e#20973#21955#0" expanded="false" />
             <element signature="e#22259#22668#0" expanded="false" />
             <element signature="e#22703#23033#0" expanded="false" />
@@ -748,26 +873,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Othello.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ConnectFour.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PiDay.pyw">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="504">
-          <caret line="550" column="102" lean-forward="false" selection-start-line="550" selection-start-column="102" selection-end-line="550" selection-end-column="102" />
+        <state relative-caret-position="748">
+          <caret line="539" column="34" lean-forward="false" selection-start-line="539" selection-start-column="34" selection-end-line="539" selection-end-column="34" />
           <folding>
             <element signature="e#748#1502#0" expanded="false" />
             <element signature="e#786#1356#0" expanded="false" />
@@ -819,6 +928,8 @@
             <element signature="e#19394#19647#0" expanded="false" />
             <element signature="e#19695#19878#0" expanded="false" />
             <element signature="e#19927#20115#0" expanded="false" />
+            <element signature="e#20157#20895#0" expanded="false" />
+            <element signature="e#20935#22668#0" expanded="false" />
             <element signature="e#20973#21955#0" expanded="false" />
             <element signature="e#22259#22668#0" expanded="false" />
             <element signature="e#22703#23033#0" expanded="false" />
@@ -850,6 +961,22 @@
             <element signature="e#31050#31212#0" expanded="false" />
             <element signature="e#31265#31552#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ConnectFour.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3349">
+          <caret line="197" column="0" lean-forward="true" selection-start-line="197" selection-start-column="0" selection-end-line="197" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Othello.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
