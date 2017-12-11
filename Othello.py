@@ -2,6 +2,9 @@
 ## 12/10/2017
 ## Othello game to be used in PiDay
 
+
+## Instantiate game board
+## 0: Empty, 1: White, 2: Black
 class Othello:
     def __init__(self):
         self.gameBoard = []
@@ -219,7 +222,8 @@ class Othello:
                 rightList.append([row, i])
 
     def isValidMove(self, string):
-        if string.isdigit():
+        if string.isdigit() and len(string) == 2 and ((int(string[0]) >= 0 and int(string[0]) <= 7)) and (
+        (int(string[1]) >= 0 and int(string[1]) <= 7)):
             return True
         else:
             return False
