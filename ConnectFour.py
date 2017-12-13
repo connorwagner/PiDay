@@ -196,7 +196,7 @@ class ConnectFour:
     #     print("Player " + str(self.winner) + " Wins!!")
 
 
-connectFour = ConnectFour()
-connectFour.gameControl()
+#connectFour = ConnectFour()
+#connectFour.gameControl()
 
 
