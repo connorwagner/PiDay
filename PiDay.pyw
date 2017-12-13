@@ -659,11 +659,13 @@ class GamesWidget(RelativeLayout):
         self.container.connectFourButton.bind(on_press=self.connectFourPopup.open)
 
 class ConnectFourWidget(RelativeLayout):
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(ConnectFourWidget, self).__init__(**kwargs)
+
         self.connectFour = ConnectFour()
         self.btnList = []
         for i in range(7):
-            self.btnList.append(Button(title=str(i), on_click=self.connectFour.playerMove(i, self.connectFour.whoseTurn())))
+            self.btnList.append(Button(title=str(i), on_click=partial(self.connectFour.playerMove, i, self.connectFour.whoseTurn())))
         self.container = BoxLayout(orientation='horizontal', spacing=10)
         for button in self.btnList:
             self.container.add_widget(button)
