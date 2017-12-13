@@ -185,15 +185,15 @@ class ConnectFour:
         for i in range(6):
             print(self.gameBoard[i])
 
-    def gameControl(self):
-        print("Enter your moves in the format of col. Ex: '2' is column 2")
-        while (not self.isWinner(self.recentCol, self.recentState)):
-            if (self.getNumSpotsLeft() == 0):
-                print("Draw!!")
-                return
-            self.playerMove(self.whoseTurn())
-            self.displayBoard()
-        print("Player " + str(self.winner) + " Wins!!")
+    # def gameControl(self):
+    #     print("Enter your moves in the format of col. Ex: '2' is column 2")
+    #     while (not self.isWinner(self.recentCol, self.recentState)):
+    #         if (self.getNumSpotsLeft() == 0):
+    #             print("Draw!!")
+    #             return
+    #         self.playerMove(self.whoseTurn())
+    #         self.displayBoard()
+    #     print("Player " + str(self.winner) + " Wins!!")
 
 
 connectFour = ConnectFour()

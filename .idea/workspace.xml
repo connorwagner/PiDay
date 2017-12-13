@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7e1a276a-6b3d-4301-b986-df12ca0e067f" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Simon.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ConnectFour.py" afterPath="$PROJECT_DIR$/ConnectFour.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PiDay.pyw" afterPath="$PROJECT_DIR$/PiDay.pyw" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -107,8 +104,8 @@
       <file leaf-file-name="ConnectFour.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ConnectFour.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="714">
-              <caret line="193" column="28" lean-forward="true" selection-start-line="193" selection-start-column="28" selection-end-line="193" selection-end-column="28" />
+            <state relative-caret-position="340">
+              <caret line="167" column="54" lean-forward="false" selection-start-line="167" selection-start-column="54" selection-end-line="167" selection-end-column="54" />
               <folding>
                 <element signature="e#136#349#0" expanded="false" />
                 <element signature="e#397#428#0" expanded="false" />
@@ -122,7 +119,7 @@
                 <element signature="e#3276#3839#0" expanded="false" />
                 <element signature="e#3896#4465#0" expanded="false" />
                 <element signature="e#5258#5311#0" expanded="false" />
-                <element signature="e#5349#5404#0" expanded="false" />
+                <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
               </folding>
             </state>
           </provider>
@@ -243,8 +240,8 @@
         <option value="$PROJECT_DIR$/TicTacToe.py" />
         <option value="$PROJECT_DIR$/Othello.py" />
         <option value="$PROJECT_DIR$/Simon.py" />
-        <option value="$PROJECT_DIR$/ConnectFour.py" />
         <option value="$PROJECT_DIR$/PiDay.pyw" />
+        <option value="$PROJECT_DIR$/ConnectFour.py" />
       </list>
     </option>
   </component>
@@ -701,7 +698,7 @@
             <element signature="e#3276#3839#0" expanded="false" />
             <element signature="e#3896#4465#0" expanded="false" />
             <element signature="e#5258#5311#0" expanded="false" />
-            <element signature="e#5349#5404#0" expanded="false" />
+            <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
           </folding>
         </state>
       </provider>
@@ -897,7 +894,7 @@
             <element signature="e#3276#3839#0" expanded="false" />
             <element signature="e#3896#4465#0" expanded="false" />
             <element signature="e#5258#5311#0" expanded="false" />
-            <element signature="e#5349#5404#0" expanded="false" />
+            <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1093,7 +1090,7 @@
             <element signature="e#3276#3839#0" expanded="false" />
             <element signature="e#3896#4465#0" expanded="false" />
             <element signature="e#5258#5311#0" expanded="false" />
-            <element signature="e#5349#5404#0" expanded="false" />
+            <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1272,7 +1269,7 @@
             <element signature="e#3276#3839#0" expanded="false" />
             <element signature="e#3896#4465#0" expanded="false" />
             <element signature="e#5258#5311#0" expanded="false" />
-            <element signature="e#5349#5404#0" expanded="false" />
+            <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1523,7 +1520,7 @@
             <element signature="e#3276#3839#0" expanded="false" />
             <element signature="e#3896#4465#0" expanded="false" />
             <element signature="e#5258#5311#0" expanded="false" />
-            <element signature="e#5349#5404#0" expanded="false" />
+            <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1659,7 +1656,7 @@
             <element signature="e#3276#3839#0" expanded="false" />
             <element signature="e#3896#4465#0" expanded="false" />
             <element signature="e#5258#5311#0" expanded="false" />
-            <element signature="e#5349#5404#0" expanded="false" />
+            <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1813,7 +1810,7 @@
             <element signature="e#3276#3839#0" expanded="false" />
             <element signature="e#3896#4465#0" expanded="false" />
             <element signature="e#5258#5311#0" expanded="false" />
-            <element signature="e#5349#5404#0" expanded="false" />
+            <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
           </folding>
         </state>
       </provider>
@@ -2121,23 +2118,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Simon.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="51" column="26" lean-forward="false" selection-start-line="51" selection-start-column="26" selection-end-line="51" selection-end-column="26" />
-          <folding>
-            <element signature="e#76#89#0" expanded="true" />
-            <element signature="e#148#167#0" expanded="false" />
-            <element signature="e#201#468#0" expanded="false" />
-            <element signature="e#506#770#0" expanded="false" />
-            <element signature="e#813#1033#0" expanded="false" />
-            <element signature="e#1079#1144#0" expanded="false" />
-            <element signature="e#1178#1423#0" expanded="false" />
-            <element signature="e#1460#2007#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Othello.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="408">
@@ -2167,10 +2147,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Simon.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="51" column="26" lean-forward="false" selection-start-line="51" selection-start-column="26" selection-end-line="51" selection-end-column="26" />
+          <folding>
+            <element signature="e#76#89#0" expanded="true" />
+            <element signature="e#148#167#0" expanded="false" />
+            <element signature="e#201#468#0" expanded="false" />
+            <element signature="e#506#770#0" expanded="false" />
+            <element signature="e#813#1033#0" expanded="false" />
+            <element signature="e#1079#1144#0" expanded="false" />
+            <element signature="e#1178#1423#0" expanded="false" />
+            <element signature="e#1460#2007#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/ConnectFour.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="714">
-          <caret line="193" column="28" lean-forward="true" selection-start-line="193" selection-start-column="28" selection-end-line="193" selection-end-column="28" />
+        <state relative-caret-position="340">
+          <caret line="167" column="54" lean-forward="false" selection-start-line="167" selection-start-column="54" selection-end-line="167" selection-end-column="54" />
           <folding>
             <element signature="e#136#349#0" expanded="false" />
             <element signature="e#397#428#0" expanded="false" />
@@ -2184,7 +2181,7 @@
             <element signature="e#3276#3839#0" expanded="false" />
             <element signature="e#3896#4465#0" expanded="false" />
             <element signature="e#5258#5311#0" expanded="false" />
-            <element signature="e#5349#5404#0" expanded="false" />
+            <marker date="1513128664879" expanded="false" signature="5340:5404" ph="..." />
           </folding>
         </state>
       </provider>
