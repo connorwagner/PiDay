@@ -663,7 +663,7 @@ class ConnectFourWidget(RelativeLayout):
         self.connectFour = ConnectFour()
         self.btnList = []
         for i in range(7):
-            self.btnList.append(Button(i, on_click=self.connectFour.playerMove(i, self.connectFour.whoseTurn())))
+            self.btnList.append(Button(title=str(i), on_click=self.connectFour.playerMove(i, self.connectFour.whoseTurn())))
         self.container = BoxLayout(orientation='horizontal', spacing=10)
         for button in self.btnList:
             self.container.add_widget(button)
