@@ -161,19 +161,19 @@ class ConnectFour:
         else:
             return False
 
-    def playerMove(self, state):
-        move = input("Player " + str(state) + "'s move: ")
-        while (not self.isValidMove(move)):
-            print("Invalid move. Try again!")
-            move = input("Player " + str(state) + "'s move: ")
-        col = int(move[0])
-        while (self.getSpotState(0, col) != 0):
-            print("Column is already full! Try again!")
-            move = input("Player " + str(state) + "'s move: ")
-            while (not self.isValidMove(move)):
-                print("Invalid move. Try again!")
-                move = input("Player " + str(state) + "'s move: ")
-            col = int(move[0])
+    def playerMove(self, col, state):
+        # move = input("Player " + str(state) + "'s move: ")
+        # while (not self.isValidMove(move)):
+        #     print("Invalid move. Try again!")
+        #     move = input("Player " + str(state) + "'s move: ")
+        # col = int(move[0])
+        # while (self.getSpotState(0, col) != 0):
+        #     print("Column is already full! Try again!")
+        #     move = input("Player " + str(state) + "'s move: ")
+        #     while (not self.isValidMove(move)):
+        #         print("Invalid move. Try again!")
+        #         move = input("Player " + str(state) + "'s move: ")
+        #     col = int(move[0])
         self.setSpotState(col, state)
         self.setMostRecent(col, state)
 

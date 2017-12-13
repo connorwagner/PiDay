@@ -13,6 +13,7 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.boxlayout import BoxLayout
 
+from ConnectFour import ConnectFour
 import time
 import json
 import urllib.request
@@ -646,11 +647,34 @@ class GamesWidget(RelativeLayout):
         self.container.connectFourButton = Button(text="Connect Four", halign='center', valign='center')
         self.container.tttButton = Button(text="TicTacToe", halign='center', valign='center')
 
+        connectFourWidget = ConnectFourWidget()
+
         self.container.add_widget(self.container.tttButton)
         self.container.add_widget(self.container.connectFourButton)
         self.container.add_widget(self.container.othelloButton)
         self.add_widget(self.container)
         self.add_widget(self.closeButton)
+
+        self.connectFourPopup = Popup(title="Connect Four", content=self.connectFourWidget)
+        self.container.connectFourButton.bind(on_press=self.connectFourPopup.open)
+
+class ConnectFourWidget(RelativeLayout):
+    def __init__(self):
+        self.connectFour = ConnectFour()
+        self.btnList = []
+        for i in range(7):
+            self.btnList.append(Button(i, on_click=self.connectFour.playerMove(i, self.connectFour.whoseTurn())))
+        self.container = BoxLayout(orientation='horizontal', spacing=10)
+        for button in self.btnList:
+            self.container.add_widget(button)
+        self.add_widget(self.container)
+
+
+    def gameControl(self):
+        while not self.connectFour.isWinner(self.connectFour.recentCol, self.connectFour.recentState):
+            if self.connectFour.getNumSpotsLeft() == 0:
+                return
+            ##self.connectFour.playerMove(self.whoseTurn())
 
 class ControlWidgets(BoxLayout):
 
@@ -688,7 +712,6 @@ class ControlWidgets(BoxLayout):
 
         self.popup = Popup(title="Games Selection", content=self.gameWidget)
         self.gameWidget.closeButton.bind(on_press=self.popup.dismiss)
-
         self.popup.open()
 
     def openQuotaWidget(self, *largs):
