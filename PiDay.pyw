@@ -14,6 +14,8 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.boxlayout import BoxLayout
 
 from ConnectFour import ConnectFour
+from Simon import Simon
+
 import time
 import json
 import urllib.request
@@ -641,7 +643,7 @@ class GamesWidget(RelativeLayout):
         self.orientation = 'vertical'
         self.spacing = 10
 
-        # Make the gameWidget containers, and add the correct games and a close button
+        # Make the gameWidget containers (will hold rows of game buttons)
         self.containerTop = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0.60}, size_hint=(1, 0.40))
         self.containerBottom = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0.17}, size_hint=(1, 0.40))
         self.containerClose = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0})
@@ -653,6 +655,8 @@ class GamesWidget(RelativeLayout):
 
         self.closeButton = Button(text="Close", halign='right', valign='center', size_hint=(1, 0.15))
 
+        # Top row will contain TicTacToe, and Connect Four
+        # Bottom row will contain Othello and Simon
         self.containerTop.add_widget(self.tttButton)
         self.containerTop.add_widget(self.connectFourButton)
         self.containerBottom.add_widget(self.othelloButton)
@@ -663,10 +667,180 @@ class GamesWidget(RelativeLayout):
         self.add_widget(self.containerBottom)
         self.add_widget(self.containerClose)
 
+        # Bind game buttons to respective launcher functions
+        self.simonButton.bind(on_press=self.openSimon)
+        self.connectFourButton.bind(on_press=self.openConnectFour)
+
+    # Opens the Simon Popup, and the Start popup (not totally functional)
+    def openSimon(self, *largs):
+        self.simonWidget = SimonWidget()
+        self.simonPopup = Popup(title="Simon", content=self.simonWidget)
+        self.simonPopup.open()
+        self.simonWidget.startingPopUp()
+        self.simonWidget.exitButton.bind(on_press=self.simonPopup.dismiss)
+
+    # Opens the connect four popup
+    def openConnectFour(self, *largs):
         self.connectFourWidget = ConnectFourWidget()
         self.connectFourPopup = Popup(title="Connect Four", content=self.connectFourWidget)
-        self.connectFourButton.bind(on_press=self.connectFourPopup.open)
+        self.connectFourPopup.open()
         self.connectFourWidget.exitButton.bind(on_press=self.connectFourPopup.dismiss)
+
+class SimonWidget(BoxLayout):
+    def __init__(self, *largs, **kwargs):
+        super(SimonWidget, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 7
+
+        # Instantiate the buttons that will be in the side container
+        self.exitButton = Button(text="Exit", halign='right', valign='center')
+        self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
+
+        self.simon = Simon()
+
+        # Main container will contain top and bot containers, which will contain the colored buttons
+        self.sideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+        self.mainContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.90, 1))
+        self.topContainer = BoxLayout(orientation='horizontal', spacing=10)
+        self.botContainer = BoxLayout(orientation='horizontal', spacing=10)
+
+        # buttonList holds the color buttons
+        self.buttonList = []
+
+        # Holds the user inputted colors
+        self.userColorList = []
+
+        # Instantiate the color buttons, and bind them to add their respective color to the list
+        self.greenButton = Button(halign='right', valign='center', disabled=True, background_color=[0, 1, 0, 0.20], on_press=partial(self.addToUserColorList, "G"))
+        self.redButton = Button(halign='right', valign='center', disabled=True, background_color=[1, 0, 0, 0.20], on_press=partial(self.addToUserColorList, "R"))
+        self.yellowButton = Button(halign='right', valign='center', disabled=True, background_color=[255, 255, 0, 0.20], on_press=partial(self.addToUserColorList, "Y"))
+        self.blueButton = Button(halign='right', valign='center', disabled=True, background_color=[0, 0, 1, 0.20], on_press=partial(self.addToUserColorList, "B"))
+
+        self.buttonList.append(self.greenButton)
+        self.buttonList.append(self.redButton)
+        self.buttonList.append(self.yellowButton)
+        self.buttonList.append(self.blueButton)
+
+        # Add all widgets in proper order
+        self.topContainer.add_widget(self.greenButton)
+        self.topContainer.add_widget(self.redButton)
+        self.botContainer.add_widget(self.yellowButton)
+        self.botContainer.add_widget(self.blueButton)
+
+        self.sideContainer.add_widget(self.exitButton)
+        self.sideContainer.add_widget(self.resetButton)
+
+        self.mainContainer.add_widget(self.topContainer)
+        self.mainContainer.add_widget(self.botContainer)
+
+        self.add_widget(self.sideContainer)
+        self.add_widget(self.mainContainer)
+
+        # Create the start popup, which SHOULD start the game upon its dismissal, and has a 'Start' button that calls a function to dismiss itself
+        self.popupStart = Popup(title="Simon", content=Button(text="Start Game", on_press=self.dismissPopup), on_dismiss=self.startGame, size_hint=(0.50, 0.50))
+
+    def startingPopUp(self):
+        self.popupStart.open()
+
+    def dismissPopup(self, *largs):
+        self.popupStart.dismiss()
+
+    # Displays initial color, and allows for first userInput
+    def startGame(self, *largs):
+        self.simon.addColor()
+        self.displayOrder()
+        self.userInput()
+
+    # Use for debugging currently, will fully reset the game later
+    def resetGame(self, *largs):
+        self.userColorList = []
+
+    # If the user sequence was correctly, flash buttons green
+    def displayCorrect(self):
+        for button in self.buttonList:
+            button.disabled = True
+            button.background_color = [0, 1, 0, 1]
+
+    # Adds color to the list, and determines whether to let user continue input, or to stop the game
+    def addToUserColorList(self, color, *largs):
+        self.userColorList.append(color)
+
+        # If the user hasn't inputted enough colors, make sure their current input is correct, otherwise its game over
+        if len(self.simon.colorList) > len(self.userColorList):
+            if self.simon.colorList[0:len(self.userColorList)] == self.userColorList:
+                return
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Incorrect Order!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                return
+        # If the user has inputted enough colors, check the userColors again the gameColors
+        else:
+            # If the user is correct, flash green, return the buttons to normal colors, add a color to list,
+            # display current list, and await user input
+            if self.simon.isCorrect(self.userColorList):
+                self.displayCorrect()
+                time.sleep(3)
+                self.reAdjustColors()
+                self.simon.addColor()
+                self.displayOrder()
+                self.userInput()
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Incorrect Order!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+
+    # Used to return buttons to normal colors after flashing green
+    def reAdjustColors(self):
+        for i in range(len(self.buttonList)):
+            if i == 0:
+                self.buttonList[0].background_color = [0, 1, 0, 0.20]
+            elif i == 1:
+                self.buttonList[1].background_color = [1, 0, 0, 0.20]
+            elif i == 2:
+                self.buttonList[2].background_color = [255, 255, 0, 0.20]
+            elif i == 3:
+                self.buttonList[3].background_color = [0, 0, 1, 0.20]
+
+    # Enabled all buttons to enable input
+    def userInput(self):
+        self.buttonList[0].background_color = [0, 1, 0, 1]
+        self.buttonList[0].disabled = False
+        self.buttonList[1].background_color = [1, 0, 0, 1]
+        self.buttonList[1].disabled = False
+        self.buttonList[2].background_color = [255, 255, 0, 1]
+        self.buttonList[2].disabled = False
+        self.buttonList[3].background_color = [0, 0, 1, 1]
+        self.buttonList[3].disabled = False
+
+    # Iterates through gameColors, and displays each color in that order
+    def displayOrder(self):
+        print("displaying order of buttons")
+        order = self.simon.colorList
+        for i in range(len(order)):
+            if order[i] == "G":
+                #self.buttonList[0].background_color = [0, 1, 0, 1]
+                time.sleep(3)
+                self.buttonList[0].background_color = [255, 255, 255, 1]
+                time.sleep(3)
+                self.buttonList[0].background_color = [0, 1, 0, 0.20]
+            elif order[i] == "R":
+                time.sleep(3)
+                #self.buttonList[1].background_color = [1, 0, 0, 1]
+                self.buttonList[0].background_color = [255, 255, 255, 1]
+                time.sleep(3)
+                self.buttonList[1].background_color = [1, 0, 0, 0.20]
+            elif order[i] == "Y":
+                time.sleep(3)
+                #self.buttonList[2].background_color = [255, 255, 0, 1]
+                self.buttonList[0].background_color = [255, 255, 255, 1]
+                time.sleep(3)
+                self.buttonList[2].background_color = [255, 255, 0, 0.20]
+            elif order[i] == "B":
+                time.sleep(3)
+                #self.buttonList[3].background_color = [0, 0, 1, 1]
+                self.buttonList[0].background_color = [255, 255, 255, 1]
+                time.sleep(3)
+                self.buttonList[3].background_color = [0, 0, 1, 0.20]
 
 class ConnectFourWidget(BoxLayout):
     def __init__(self, *largs,**kwargs):
