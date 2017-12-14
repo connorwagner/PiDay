@@ -639,44 +639,155 @@ class GamesWidget(RelativeLayout):
         super(GamesWidget, self).__init__(**kwargs)
 
         self.orientation = 'vertical'
-        self.spacing = 5
+        self.spacing = 10
 
-        self.closeButton = Button(text="Close", halign='center', valign='center', size_hint=(1, 0.15))
-        self.container = BoxLayout(orientation='horizontal', spacing=15)
-        self.container.othelloButton = Button(text="Othello", halign='center', valign='center')
-        self.container.connectFourButton = Button(text="Connect Four", halign='center', valign='center')
-        self.container.tttButton = Button(text="TicTacToe", halign='center', valign='center')
+        # Make the gameWidget containers, and add the correct games and a close button
+        self.containerTop = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0.60}, size_hint=(1, 0.40))
+        self.containerBottom = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0.17}, size_hint=(1, 0.40))
+        self.containerClose = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0})
 
-        connectFourWidget = ConnectFourWidget()
+        self.othelloButton = Button(text="Othello", halign='center', valign='center')
+        self.connectFourButton = Button(text="Connect Four", halign='center', valign='center')
+        self.tttButton = Button(text="TicTacToe", halign='center', valign='center')
+        self.simonButton = Button(text="Simon", halign='center', valign='center')
 
-        self.container.add_widget(self.container.tttButton)
-        self.container.add_widget(self.container.connectFourButton)
-        self.container.add_widget(self.container.othelloButton)
-        self.add_widget(self.container)
-        self.add_widget(self.closeButton)
+        self.closeButton = Button(text="Close", halign='right', valign='center', size_hint=(1, 0.15))
 
+        self.containerTop.add_widget(self.tttButton)
+        self.containerTop.add_widget(self.connectFourButton)
+        self.containerBottom.add_widget(self.othelloButton)
+        self.containerBottom.add_widget(self.simonButton)
+        self.containerClose.add_widget(self.closeButton)
+
+        self.add_widget(self.containerTop)
+        self.add_widget(self.containerBottom)
+        self.add_widget(self.containerClose)
+
+        self.connectFourWidget = ConnectFourWidget()
         self.connectFourPopup = Popup(title="Connect Four", content=self.connectFourWidget)
-        self.container.connectFourButton.bind(on_press=self.connectFourPopup.open)
+        self.connectFourButton.bind(on_press=self.connectFourPopup.open)
+        self.connectFourWidget.exitButton.bind(on_press=self.connectFourPopup.dismiss)
 
-class ConnectFourWidget(RelativeLayout):
-    def __init__(self, **kwargs):
+class ConnectFourWidget(BoxLayout):
+    def __init__(self, *largs,**kwargs):
         super(ConnectFourWidget, self).__init__(**kwargs)
 
+        self.orientation = 'horizontal'
+        self.spacing = 7
+
+        # Create exit button for the pop up
+        self.exitButton = Button(text="Exit", halign='right', valign='center')
+        self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
+
+        # Create ConnectFour object, and list to hold the placement buttons
         self.connectFour = ConnectFour()
         self.btnList = []
+
+        # Create buttons for each column, and place them in list
         for i in range(7):
-            self.btnList.append(Button(title=str(i), on_click=partial(self.connectFour.playerMove, i, self.connectFour.whoseTurn())))
-        self.container = BoxLayout(orientation='horizontal', spacing=10)
+            self.btnList.append(Button(text=str(i+1), halign='right', valign='top', on_press=partial(self.playerMoveHelper, i, self.connectFour.whoseTurn())))
+
+        # Create containers for the connect four game layout
+        self.boardContainer = BoxLayout(orientation='vertical', spacing=5, size_hint=(0.90, 1))
+        self.topContainer = BoxLayout(orientation='horizontal', spacing=1, size_hint=(1, 0.10))
+        self.rowsContainer = BoxLayout(orientation='vertical', spacing=1, size_hint=(1, 0.90))
+        self.sideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+
+        # Add each button in the list to the topContainer
         for button in self.btnList:
-            self.container.add_widget(button)
-        self.add_widget(self.container)
+            self.topContainer.add_widget(button)
 
+        # containerList will hold the rows of buttons, boardButtonList is a 2d list of all gameButtons
+        self.containerList = []
+        self.boardButtonList = []
 
-    def gameControl(self):
-        while not self.connectFour.isWinner(self.connectFour.recentCol, self.connectFour.recentState):
-            if self.connectFour.getNumSpotsLeft() == 0:
-                return
-            ##self.connectFour.playerMove(self.whoseTurn())
+        # Add labels to rows in rowsContainer
+        for row in range(6):
+            self.containerList.append(BoxLayout(orientation='horizontal', spacing=1))
+            self.tempList = []
+            for col in range(7):
+                temp = Button(halign='right', valign='top', disabled=True)
+                self.containerList[row].add_widget(temp)
+                self.tempList.append(temp)
+            self.boardButtonList.append(self.tempList)
+
+        # Add all the container rows to the row container
+        for container in self.containerList:
+            self.rowsContainer.add_widget(container)
+
+        # Determine which color to make the control buttons
+        if self.connectFour.whoseTurn() == 1:
+            for button in self.btnList:
+                button.background_color = [0, 0, 1, 1]
+        else:
+            for button in self.btnList:
+                button.background_color = [1, 0, 0, 1]
+
+        # Add all of the containers and buttons
+        self.boardContainer.add_widget(self.topContainer)
+        self.boardContainer.add_widget(self.rowsContainer)
+        self.sideContainer.add_widget(self.exitButton)
+        self.sideContainer.add_widget(self.resetButton)
+        self.add_widget(self.sideContainer)
+        self.add_widget(self.boardContainer)
+
+    # Function called by resetButton, resets all game boards and button colors for a new game
+    def resetGame(self, *largs):
+        for row in range(6):
+            for col in range(7):
+                self.boardButtonList[row][col].background_color = [169, 169, 169]
+
+        self.connectFour.reset()
+
+        for button in self.btnList:
+            button.disabled = False
+            if self.connectFour.whoseTurn() == 1:
+                button.background_color = [0, 0, 1, 1]
+            else:
+                button.background_color = [1, 0, 0, 1]
+
+    # Helper function for connectFour's playerMove() function
+    def playerMoveHelper(self, col, state, *largs):
+
+        # When pressing a control button, if it is the last button in the col, disable the respective control btn
+        if self.connectFour.getSpotState(1, col) != 0:
+            self.btnList[col].disabled = True
+            self.btnList[col].background_color = [0, 0, 0, 1]
+
+        x, y = self.connectFour.playerMove(col, self.connectFour.whoseTurn())
+
+        self.checkWinner(col)
+        self.buttonControl(x, y)
+
+    # Disable all the control buttons (for use after a player wins)
+    def disableControlButtons(self):
+        for button in self.btnList:
+            button.disabled = True
+
+    # Determine who won, and display a popUp
+    def checkWinner(self, col):
+        if self.connectFour.isWinner(col, self.connectFour.recentState):
+            if self.connectFour.recentState == 1:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Blue player wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                self.disableControlButtons()
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Red player wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                self.disableControlButtons()
+
+    # Determine which buttons to disable and change color of
+    def buttonControl(self, x, y):
+        if self.connectFour.whoseTurn() == 1:
+            self.boardButtonList[x][y].background_color = [1, 0, 0, 1]
+            for button in self.btnList:
+                if not button.disabled:
+                    button.background_color = [0, 0, 1, 1]
+        else:
+            self.boardButtonList[x][y].background_color = [0, 0, 1, 1]
+            for button in self.btnList:
+                if not button.disabled:
+                    button.background_color = [1, 0, 0, 1]
 
 class ControlWidgets(BoxLayout):
 

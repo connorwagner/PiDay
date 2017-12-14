@@ -23,7 +23,8 @@ class ConnectFour:
             if self.gameBoard[row][col] == 0:
                 self.gameBoard[row][col] = state
                 self.spotsUsed += 1
-                return
+                return row, col
+        return "Error"
 
     def getNumSpotsLeft(self):
         return 42 - self.spotsUsed
@@ -66,7 +67,7 @@ class ConnectFour:
     def checkDownRightUpLeft(self, row, col, state):
         connectCtr = 1
         ctr = 1
-        while (row + ctr != 6 and col + ctr != 7):
+        while row + ctr != 6 and col + ctr != 7:
             if connectCtr == 4:
                 return True
             if self.gameBoard[row + ctr][col + ctr] == state:
@@ -76,7 +77,7 @@ class ConnectFour:
                 break
 
         ctr = 1
-        while (row - ctr != -1 and col - ctr != -1):
+        while row - ctr != -1 and col - ctr != -1:
             if connectCtr == 4:
                 return True
             if self.gameBoard[row - ctr][col - ctr] == state:
@@ -93,7 +94,7 @@ class ConnectFour:
     def checkDownLeftUpRight(self, row, col, state):
         connectCtr = 1
         ctr = 1
-        while (row + ctr != 6 and col - ctr != -1):
+        while row + ctr != 6 and col - ctr != -1:
             if connectCtr == 4:
                 return True
             if self.gameBoard[row + ctr][col - ctr] == state:
@@ -103,7 +104,7 @@ class ConnectFour:
                 break
 
         ctr = 1
-        while (row - ctr != -1 and col + ctr != 7):
+        while row - ctr != -1 and col + ctr != 7:
             if connectCtr == 4:
                 return True
             if self.gameBoard[row - ctr][col + ctr] == state:
@@ -162,41 +163,26 @@ class ConnectFour:
             return False
 
     def playerMove(self, col, state):
-        # move = input("Player " + str(state) + "'s move: ")
-        # while (not self.isValidMove(move)):
-        #     print("Invalid move. Try again!")
-        #     move = input("Player " + str(state) + "'s move: ")
-        # col = int(move[0])
-        # while (self.getSpotState(0, col) != 0):
-        #     print("Column is already full! Try again!")
-        #     move = input("Player " + str(state) + "'s move: ")
-        #     while (not self.isValidMove(move)):
-        #         print("Invalid move. Try again!")
-        #         move = input("Player " + str(state) + "'s move: ")
-        #     col = int(move[0])
-        self.setSpotState(col, state)
+        #if self.getSpotState(0, col) != 0:
         self.setMostRecent(col, state)
-
-    def setMostRecent(self, col, state):
-        self.recentState = state
-        self.recentCol = col
+        return self.setSpotState(col, state)
 
     def displayBoard(self):
         for i in range(6):
             print(self.gameBoard[i])
 
-    # def gameControl(self):
-    #     print("Enter your moves in the format of col. Ex: '2' is column 2")
-    #     while (not self.isWinner(self.recentCol, self.recentState)):
-    #         if (self.getNumSpotsLeft() == 0):
-    #             print("Draw!!")
-    #             return
-    #         self.playerMove(self.whoseTurn())
-    #         self.displayBoard()
-    #     print("Player " + str(self.winner) + " Wins!!")
+    def setMostRecent(self, col, state):
+        self.recentState = state
+        self.recentCol = col
 
+    def reset(self):
+        for row in range(6):
+            for col in range(7):
+                self.gameBoard[row][col] = 0
 
-#connectFour = ConnectFour()
-#connectFour.gameControl()
+        self.spotsUsed = 0
+        self.winner = -1
+        self.recentState = -1
+        self.recentCol = 0
 
 
