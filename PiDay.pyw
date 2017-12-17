@@ -823,9 +823,9 @@ class OthelloWidget(BoxLayout):
         self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
 
         # Create buttons to track # of black and white tokens, as well as whose turn it is (for right side container)
-        self.blackTokenButton = Button(text=str(self.othello.twoCtr), halign='right', valign='center', disabled=True, background_color=[0, 0, 0, 1])
-        self.whiteTokenButton = Button(text=str(self.othello.oneCtr), halign='right', valign='center', disabled=True, background_color=[60, 179, 113, 1])
-        self.whoseTurnButton = Button(text="Turn", halign='right', valign='center', disabled=True, background_color=[0, 0, 0, 1])
+        self.blackTokenButton = Button(text=str(self.othello.twoCtr), background_disabled_normal='atlas://data/images/defaulttheme/button', halign='right', valign='center', disabled=True, background_color=[0, 0, 0, 1])
+        self.whiteTokenButton = Button(text=str(self.othello.oneCtr), color=[0, 0, 0, 1], background_disabled_normal='atlas://data/images/defaulttheme/button', halign='right', valign='center', disabled=True, background_color=[60, 179, 113, 1])
+        self.whoseTurnButton = Button(text="Turn", halign='right', background_disabled_normal='atlas://data/images/defaulttheme/button', valign='center', disabled=True, background_color=[0, 0, 0, 1])
 
         self.containerList = []
         self.btnList = []
@@ -835,7 +835,7 @@ class OthelloWidget(BoxLayout):
             self.containerList.append(BoxLayout(orientation='horizontal', spacing=1))
             self.tempList = []
             for col in range(8):
-                temp = Button(halign='right', valign='top', background_color=[0, 100, 0, 0.50], on_press=partial(self.playerMoveHelper, row, col, self.othello.whoseTurn()))
+                temp = Button(halign='right', valign='top', background_disabled_normal='atlas://data/images/defaulttheme/button', background_color=[0, 100, 0, 0.50], on_press=partial(self.playerMoveHelper, row, col, self.othello.whoseTurn()))
                 self.containerList[row].add_widget(temp)
                 self.tempList.append(temp)
             self.btnList.append(self.tempList)
@@ -868,6 +868,14 @@ class OthelloWidget(BoxLayout):
         self.add_widget(self.boardContainer)
         self.add_widget(self.rightSideContainer)
 
+        for x in range(8):
+            for y in range(8):
+                if self.btnList[x][y].background_color == [0, 100, 0, 0.50]:
+                    if self.othello.checkForSwaps(x, y, self.othello.whoseTurn()) == []:
+                        self.btnList[x][y].disabled = True
+                    else:
+                        self.btnList[x][y].disabled = False
+
     # Function called by the reset button, resets the game
     def resetGame(self, *largs):
 
@@ -895,10 +903,20 @@ class OthelloWidget(BoxLayout):
         self.btnList[4][3].disabled = True
         self.btnList[4][4].disabled = True
 
+        # Disable buttons for invalid moves
+        for x in range(8):
+            for y in range(8):
+                if self.btnList[x][y].background_color == [0, 100, 0, 0.50]:
+                    if self.othello.checkForSwaps(x, y, self.othello.whoseTurn()) == []:
+                        self.btnList[x][y].disabled = True
+                    else:
+                        self.btnList[x][y].disabled = False
+
         # Update the display buttons
         self.blackTokenButton.text = str(self.othello.twoCtr)
         self.whiteTokenButton.text = str(self.othello.oneCtr)
         self.whoseTurnButton.background_color = [0, 0, 0, 1]
+        self.whoseTurnButton.color = [60, 179, 113, 1]
 
     # Helper function called when a placeButton is pressed
     def playerMoveHelper(self, row, col, state, *largs):
@@ -919,14 +937,24 @@ class OthelloWidget(BoxLayout):
         # Swap the whoseTurnButton, and the color of the pressed button
         if state == 2:
             self.whoseTurnButton.background_color = [60, 179, 113, 1]
+            self.whoseTurnButton.color = [0, 0, 0, 1]
             self.btnList[row][col].background_color = [0, 0, 0, 1]
         else:
             self.whoseTurnButton.background_color = [0, 0, 0, 1]
+            self.whoseTurnButton.color = [60, 179, 113, 1]
             self.btnList[row][col].background_color = [60, 179, 113, 1]
 
         # Update the # of tokens there are currently on the buttons
         self.blackTokenButton.text = str(self.othello.twoCtr)
         self.whiteTokenButton.text = str(self.othello.oneCtr)
+
+        for x in range(8):
+            for y in range(8):
+                if self.btnList[x][y].background_color == [0, 100, 0, 0.50]:
+                    if self.othello.checkForSwaps(x, y, self.othello.whoseTurn()) == []:
+                        self.btnList[x][y].disabled = True
+                    else:
+                        self.btnList[x][y].disabled = False
 
         self.checkWinner()
 

@@ -40,7 +40,17 @@ class Othello:
 
     def playerMove(self, row, col, state):
         self.setSpotState(row, col, state)
-        return self.checkForSwaps(row, col, state)
+        self.allSwaps = self.checkForSwaps(row, col, state)
+        for spot in self.allSwaps:
+            self.gameBoard[spot[0]][spot[1]] = state
+
+        if state == 2:
+            self.twoCtr += len(self.allSwaps)
+            self.oneCtr -= len(self.allSwaps)
+        else:
+            self.oneCtr += len(self.allSwaps)
+            self.twoCtr -= len(self.allSwaps)
+        return self.allSwaps
 
     def checkForSwaps(self, row, col, state):
         self.allSwaps = []
@@ -79,13 +89,6 @@ class Othello:
             for spot in self.upLeftSwaps:
                 self.allSwaps.append(spot)
 
-        if state == 2:
-            self.twoCtr += len(self.allSwaps)
-            self.oneCtr -= len(self.allSwaps)
-        else:
-            self.oneCtr += len(self.allSwaps)
-            self.twoCtr -= len(self.allSwaps)
-
         return self.allSwaps
 
     def checkUpRightForSwaps(self, row, col, state):
@@ -94,8 +97,6 @@ class Othello:
         while (row - ctr != -1 and col + ctr != 8):
             if self.gameBoard[row - ctr][col + ctr] == state:
                 if len(upRightList) != 0:
-                    for spot in upRightList:
-                        self.gameBoard[spot[0]][spot[1]] = state
                     return upRightList
                 else:
                     return []
@@ -111,8 +112,6 @@ class Othello:
         while (row + ctr != 8 and col - ctr != -1):
             if self.gameBoard[row + ctr][col - ctr] == state:
                 if len(downLeftList) != 0:
-                    for spot in downLeftList:
-                        self.gameBoard[spot[0]][spot[1]] = state
                     return downLeftList
                 else:
                     return []
@@ -128,8 +127,6 @@ class Othello:
         while (row - ctr != -1 and col - ctr != -1):
             if self.gameBoard[row - ctr][col - ctr] == state:
                 if len(upLeftList) != 0:
-                    for spot in upLeftList:
-                        self.gameBoard[spot[0]][spot[1]] = state
                     return upLeftList
                 else:
                     return []
@@ -145,8 +142,6 @@ class Othello:
         while (row + ctr != 8 and col + ctr != 8):
             if self.gameBoard[row + ctr][col + ctr] == state:
                 if len(downRightList) != 0:
-                    for spot in downRightList:
-                        self.gameBoard[spot[0]][spot[1]] = state
                     return downRightList
                 else:
                     return []
@@ -161,8 +156,6 @@ class Othello:
         for i in range(row + 1, 8):
             if self.gameBoard[i][col] == state:
                 if len(downList) != 0:
-                    for spot in downList:
-                        self.gameBoard[spot[0]][spot[1]] = state
                     return downList
                 else:
                     return []
@@ -176,8 +169,6 @@ class Othello:
         for i in range(row - 1, -1, -1):
             if self.gameBoard[i][col] == state:
                 if len(upList) != 0:
-                    for spot in upList:
-                        self.gameBoard[spot[0]][spot[1]] = state
                     return upList
                 else:
                     return []
@@ -191,8 +182,6 @@ class Othello:
         for i in range(col - 1, -1, -1):
             if self.gameBoard[row][i] == state:
                 if len(leftList) != 0:
-                    for spot in leftList:
-                        self.gameBoard[spot[0]][spot[1]] = state
                     return leftList
                 else:
                     return []
@@ -206,8 +195,6 @@ class Othello:
         for i in range(col + 1, 8):
             if self.gameBoard[row][i] == state:
                 if len(rightList) != 0:
-                    for spot in rightList:
-                        self.gameBoard[spot[0]][spot[1]] = state
                     return rightList
                 else:
                     return []
