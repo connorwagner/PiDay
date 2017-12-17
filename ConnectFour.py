@@ -35,12 +35,6 @@ class ConnectFour:
         else:
             return 2
 
-    def isValidMove(self, string):
-        if string.isdigit() and len(string) == 1 and int(string[0]) >= 0 and int(string[0]) <= 6:
-            return True
-        else:
-            return False
-
     def isWinner(self, col, state):
         row = 0
         for lastRow in range(6):

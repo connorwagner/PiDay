@@ -8,8 +8,9 @@
 class Othello:
     def __init__(self):
         self.gameBoard = []
-        self.oneCtr = 0
-        self.twoCtr = 0
+        self.placeCtr = 4
+        self.oneCtr = 2
+        self.twoCtr = 2
 
         for i in range(8):
             self.gameBoard.append([0, 0, 0, 0, 0, 0, 0, 0])
@@ -19,75 +20,87 @@ class Othello:
 
     def setSpotState(self, row, col, state):
         self.gameBoard[row][col] = state
+        self.placeCtr += 1
         if state == 1:
             self.oneCtr += 1
         elif state == 2:
             self.twoCtr += 1
 
     def getNumSpotsLeft(self):
-        return 64 - (self.twoCtr + self.oneCtr)
+        return 64 - self.placeCtr
 
     def isWinner(self):
         return 0 == self.getNumSpotsLeft()
 
-    def whoWon(self):
-        if self.isWinner:
-            if self.oneCtr > self.twoCtr:
-                return "Player One won!!"
-            elif self.twoCtr > self.oneCtr:
-                return "Player Two Won!!"
-            else:
-                return "It's a tie!!"
-        else:
-            return "No winner yet"
-
     def whoseTurn(self):
         if self.getNumSpotsLeft() % 2 == 0:
-            return 1
-        else:
             return 2
+        else:
+            return 1
 
-    def playerMove(self, state):
-        move = input("Player " + str(state) + "'s move: ")
-        while (not self.isValidMove(move)):
-            print("Invalid move. Try again!")
-            move = input("Player " + str(state) + "'s move: ")
-        row = int(move[0])
-        col = int(move[1])
-        while (self.getSpotState(row, col) != 0):
-            print("Spot already taken. Try again!")
-            move = input("Player " + str(state) + "'s move: ")
-            while (not self.isValidMove(move)):
-                print("Invalid move. Try again!")
-                move = input("Player " + str(state) + "'s move: ")
-            row = int(move[0])
-            col = int(move[1])
-        self.checkForSwaps(row, col, state)
+    def playerMove(self, row, col, state):
         self.setSpotState(row, col, state)
+        return self.checkForSwaps(row, col, state)
 
     def checkForSwaps(self, row, col, state):
-        self.checkDownForSwaps(row, col, state)
-        self.checkUpForSwaps(row, col, state)
-        self.checkLeftForSwaps(row, col, state)
-        self.checkRightForSwaps(row, col, state)
-        self.checkDownRightForSwaps(row, col, state)
-        self.checkDownLeftForSwaps(row, col, state)
-        self.checkUpLeftForSwaps(row, col, state)
-        self.checkUpRightForSwaps(row, col, state)
+        self.allSwaps = []
+
+        self.downSwaps = self.checkDownForSwaps(row, col, state)
+        self.upSwaps = self.checkUpForSwaps(row, col, state)
+        self.leftSwaps = self.checkLeftForSwaps(row, col, state)
+        self.rightSwaps = self.checkRightForSwaps(row, col, state)
+        self.downRightSwaps = self.checkDownRightForSwaps(row, col, state)
+        self.downLeftSwaps = self.checkDownLeftForSwaps(row, col, state)
+        self.upRightSwaps = self.checkUpRightForSwaps(row, col, state)
+        self.upLeftSwaps = self.checkUpLeftForSwaps(row, col, state)
+
+        if self.downSwaps != None:
+            for spot in self.downSwaps:
+                self.allSwaps.append(spot)
+        if self.upSwaps != None:
+            for spot in self.upSwaps:
+                self.allSwaps.append(spot)
+        if self.leftSwaps != None:
+            for spot in self.leftSwaps:
+                self.allSwaps.append(spot)
+        if self.rightSwaps != None:
+            for spot in self.rightSwaps:
+                self.allSwaps.append(spot)
+        if self.downRightSwaps != None:
+            for spot in self.downRightSwaps:
+                self.allSwaps.append(spot)
+        if self.downLeftSwaps != None:
+            for spot in self.downLeftSwaps:
+                self.allSwaps.append(spot)
+        if self.upRightSwaps != None:
+            for spot in self.upRightSwaps:
+                self.allSwaps.append(spot)
+        if self.upLeftSwaps != None:
+            for spot in self.upLeftSwaps:
+                self.allSwaps.append(spot)
+
+        if state == 2:
+            self.twoCtr += len(self.allSwaps)
+            self.oneCtr -= len(self.allSwaps)
+        else:
+            self.oneCtr += len(self.allSwaps)
+            self.twoCtr -= len(self.allSwaps)
+
+        return self.allSwaps
 
     def checkUpRightForSwaps(self, row, col, state):
         upRightList = []
         ctr = 1
-        while (row + ctr != -1 and col + ctr != 8):
+        while (row - ctr != -1 and col + ctr != 8):
             if self.gameBoard[row - ctr][col + ctr] == state:
                 if len(upRightList) != 0:
                     for spot in upRightList:
                         self.gameBoard[spot[0]][spot[1]] = state
-                    return
+                    return upRightList
                 else:
-                    return
+                    return []
             elif self.gameBoard[row - ctr][col + ctr] == 0:
-                return
+                return []
             else:
                 upRightList.append([row - ctr, col + ctr])
                 ctr += 1
@@ -95,16 +108,16 @@ class Othello:
     def checkDownLeftForSwaps(self, row, col, state):
         downLeftList = []
         ctr = 1
-        while (row + ctr != 8 and col + ctr != -1):
+        while (row + ctr != 8 and col - ctr != -1):
             if self.gameBoard[row + ctr][col - ctr] == state:
                 if len(downLeftList) != 0:
                     for spot in downLeftList:
                         self.gameBoard[spot[0]][spot[1]] = state
-                    return
+                    return downLeftList
                 else:
-                    return
+                    return []
             elif self.gameBoard[row + ctr][col - ctr] == 0:
-                return
+                return []
             else:
                 downLeftList.append([row + ctr, col - ctr])
                 ctr += 1
@@ -112,16 +125,16 @@ class Othello:
     def checkUpLeftForSwaps(self, row, col, state):
         upLeftList = []
         ctr = 1
-        while (row + ctr != -1 and col + ctr != -1):
+        while (row - ctr != -1 and col - ctr != -1):
             if self.gameBoard[row - ctr][col - ctr] == state:
                 if len(upLeftList) != 0:
                     for spot in upLeftList:
                         self.gameBoard[spot[0]][spot[1]] = state
-                    return
+                    return upLeftList
                 else:
-                    return
+                    return []
             elif self.gameBoard[row - ctr][col - ctr] == 0:
-                return
+                return []
             else:
                 upLeftList.append([row - ctr, col - ctr])
                 ctr += 1
@@ -134,11 +147,11 @@ class Othello:
                 if len(downRightList) != 0:
                     for spot in downRightList:
                         self.gameBoard[spot[0]][spot[1]] = state
-                    return
+                    return downRightList
                 else:
-                    return
+                    return []
             elif self.gameBoard[row + ctr][col + ctr] == 0:
-                return
+                return []
             else:
                 downRightList.append([row + ctr, col + ctr])
                 ctr += 1
@@ -150,11 +163,11 @@ class Othello:
                 if len(downList) != 0:
                     for spot in downList:
                         self.gameBoard[spot[0]][spot[1]] = state
-                    return
+                    return downList
                 else:
-                    return
+                    return []
             elif self.gameBoard[i][col] == 0:
-                return
+                return []
             else:
                 downList.append([i, col])
 
@@ -165,11 +178,11 @@ class Othello:
                 if len(upList) != 0:
                     for spot in upList:
                         self.gameBoard[spot[0]][spot[1]] = state
-                    return
+                    return upList
                 else:
-                    return
+                    return []
             elif self.gameBoard[i][col] == 0:
-                return
+                return []
             else:
                 upList.append([i, col])
 
@@ -180,11 +193,11 @@ class Othello:
                 if len(leftList) != 0:
                     for spot in leftList:
                         self.gameBoard[spot[0]][spot[1]] = state
-                    return
+                    return leftList
                 else:
-                    return
+                    return []
             elif self.gameBoard[row][i] == 0:
-                return
+                return []
             else:
                 leftList.append([row, i])
 
@@ -195,33 +208,15 @@ class Othello:
                 if len(rightList) != 0:
                     for spot in rightList:
                         self.gameBoard[spot[0]][spot[1]] = state
-                    return
+                    return rightList
                 else:
-                    return
+                    return []
             elif self.gameBoard[row][i] == 0:
-                return
+                return []
             else:
                 rightList.append([row, i])
-
-    def isValidMove(self, string):
-        if string.isdigit() and len(string) == 2 and ((int(string[0]) >= 0 and int(string[0]) <= 7)) and (
-        (int(string[1]) >= 0 and int(string[1]) <= 7)):
-            return True
-        else:
-            return False
 
     def displayBoard(self):
         for i in range(8):
             print(self.gameBoard[i])
-
-    def gameControl(self):
-        print("Enter your moves in the format of rowCol. Ex: '12' is row 1, column 2")
-        while (not self.isWinner()):
-            self.playerMove(self.whoseTurn())
-            self.displayBoard()
-        print(self.whoWon())
-
-
-othello = Othello()
-othello.gameControl()
 

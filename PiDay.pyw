@@ -15,6 +15,7 @@ from kivy.uix.boxlayout import BoxLayout
 
 from ConnectFour import ConnectFour
 from Simon import Simon
+from Othello import Othello
 
 import time
 import json
@@ -668,8 +669,16 @@ class GamesWidget(RelativeLayout):
         self.add_widget(self.containerClose)
 
         # Bind game buttons to respective launcher functions
+        self.othelloButton.bind(on_press=self.openOthello)
         self.simonButton.bind(on_press=self.openSimon)
         self.connectFourButton.bind(on_press=self.openConnectFour)
+
+    # Opens the Othello popup
+    def openOthello(self, *largs):
+        self.othelloWidget = OthelloWidget()
+        self.othelloPopup = Popup(title="Othello", content=self.othelloWidget)
+        self.othelloWidget.exitButton.bind(on_press=self.othelloPopup.dismiss)
+        self.othelloPopup.open()
 
     # Opens the Simon Popup, and the Start popup (not totally functional)
     def openSimon(self, *largs):
@@ -685,6 +694,145 @@ class GamesWidget(RelativeLayout):
         self.connectFourPopup = Popup(title="Connect Four", content=self.connectFourWidget)
         self.connectFourPopup.open()
         self.connectFourWidget.exitButton.bind(on_press=self.connectFourPopup.dismiss)
+
+class OthelloWidget(BoxLayout):
+    def __init__(self, *largs, **kwargs):
+        super(OthelloWidget, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 7
+
+        # Create containers to divide the othello popup
+        self.boardContainer = BoxLayout(orientation='vertical', spacing=1, size_hint=(0.90, 1))
+        self.leftSideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+        self.rightSideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+
+        self.othello = Othello()
+
+        # Create exit & reset button for left side container
+        self.exitButton = Button(text="Exit", halign='right', valign='center')
+        self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
+
+        # Create buttons to track # of black and white tokens, as well as whose turn it is (for right side container)
+        self.blackTokenButton = Button(text=str(self.othello.twoCtr), halign='right', valign='center', disabled=True, background_color=[0, 0, 0, 1])
+        self.whiteTokenButton = Button(text=str(self.othello.oneCtr), halign='right', valign='center', disabled=True, background_color=[60, 179, 113, 1])
+        self.whoseTurnButton = Button(text="Turn", halign='right', valign='center', disabled=True, background_color=[0, 0, 0, 1])
+
+        self.containerList = []
+        self.btnList = []
+
+        # Add labels to rows in rowsContainer
+        for row in range(8):
+            self.containerList.append(BoxLayout(orientation='horizontal', spacing=1))
+            self.tempList = []
+            for col in range(8):
+                temp = Button(halign='right', valign='top', background_color=[0, 100, 0, 0.50], on_press=partial(self.playerMoveHelper, row, col, self.othello.whoseTurn()))
+                self.containerList[row].add_widget(temp)
+                self.tempList.append(temp)
+            self.btnList.append(self.tempList)
+
+        # Manually add the four center tokens (do this so whoseTurn() isn't messed up, as black must go first)
+        self.othello.gameBoard[3][3] = 1
+        self.othello.gameBoard[3][4] = 2
+        self.othello.gameBoard[4][3] = 2
+        self.othello.gameBoard[4][4] = 1
+        self.btnList[3][3].background_color = [60, 179, 113, 1]
+        self.btnList[3][4].background_color = [0, 0, 0, 1]
+        self.btnList[4][3].background_color = [0, 0, 0, 1]
+        self.btnList[4][4].background_color = [60, 179, 113, 1]
+        self.btnList[3][3].disabled = True
+        self.btnList[3][4].disabled = True
+        self.btnList[4][3].disabled = True
+        self.btnList[4][4].disabled = True
+
+        # Add all the container rows to the row container
+        for container in self.containerList:
+            self.boardContainer.add_widget(container)
+
+        # Add widgets to their respective containers
+        self.rightSideContainer.add_widget(self.whiteTokenButton)
+        self.rightSideContainer.add_widget(self.blackTokenButton)
+        self.rightSideContainer.add_widget(self.whoseTurnButton)
+        self.leftSideContainer.add_widget(self.exitButton)
+        self.leftSideContainer.add_widget(self.resetButton)
+        self.add_widget(self.leftSideContainer)
+        self.add_widget(self.boardContainer)
+        self.add_widget(self.rightSideContainer)
+
+    # Function called by the reset button, resets the game
+    def resetGame(self, *largs):
+
+        self.othello.oneCtr = 2
+        self.othello.twoCtr = 2
+        self.othello.placeCtr = 4
+
+        for row in range(8):
+            for col in range(8):
+                self.othello.gameBoard[row][col] = 0
+                self.btnList[row][col].background_color = [0, 100, 0, 0.50]
+                self.btnList[row][col].disabled = False
+
+        # Manually add the four center tokens (do this so whoseTurn() isn't messed up, as black must go first)
+        self.othello.gameBoard[3][3] = 1
+        self.othello.gameBoard[3][4] = 2
+        self.othello.gameBoard[4][3] = 2
+        self.othello.gameBoard[4][4] = 1
+        self.btnList[3][3].background_color = [60, 179, 113, 1]
+        self.btnList[3][4].background_color = [0, 0, 0, 1]
+        self.btnList[4][3].background_color = [0, 0, 0, 1]
+        self.btnList[4][4].background_color = [60, 179, 113, 1]
+        self.btnList[3][3].disabled = True
+        self.btnList[3][4].disabled = True
+        self.btnList[4][3].disabled = True
+        self.btnList[4][4].disabled = True
+
+        # Update the display buttons
+        self.blackTokenButton.text = str(self.othello.twoCtr)
+        self.whiteTokenButton.text = str(self.othello.oneCtr)
+        self.whoseTurnButton.background_color = [0, 0, 0, 1]
+
+    # Helper function called when a placeButton is pressed
+    def playerMoveHelper(self, row, col, state, *largs):
+        state = self.othello.whoseTurn()
+
+        # Check for any swaps, if there are any, swap them
+        self.allSwaps = self.othello.playerMove(row, col, state)
+        if self.allSwaps != []:
+            for item in self.allSwaps:
+                if state == 2:
+                    self.btnList[item[0]][item[1]].background_color = [0, 0, 0, 1]
+                else:
+                    self.btnList[item[0]][item[1]].background_color = [60, 179, 113, 1]
+
+        # Disabled place button that was pressed
+        self.btnList[row][col].disabled = True
+
+        # Swap the whoseTurnButton, and the color of the pressed button
+        if state == 2:
+            self.whoseTurnButton.background_color = [60, 179, 113, 1]
+            self.btnList[row][col].background_color = [0, 0, 0, 1]
+        else:
+            self.whoseTurnButton.background_color = [0, 0, 0, 1]
+            self.btnList[row][col].background_color = [60, 179, 113, 1]
+
+        # Update the # of tokens there are currently on the buttons
+        self.blackTokenButton.text = str(self.othello.twoCtr)
+        self.whiteTokenButton.text = str(self.othello.oneCtr)
+
+        self.checkWinner()
+
+    # Determines if there was a winner, and produces a popup for that winner
+    def checkWinner(self):
+        if self.othello.isWinner():
+            if self.othello.twoCtr > self.othello.oneCtr:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Black player wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+            elif self.othello.oneCtr > self.othello.twoCtr:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="White player wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Draw!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
 
 class SimonWidget(BoxLayout):
     def __init__(self, *largs, **kwargs):
@@ -1058,13 +1206,13 @@ class LeftPane(BoxLayout):
         self.timeWidget = TimeWidget()
         self.quoteWidget = QuoteWidget()
         self.weatherWidget = WeatherWidget()
-        self.stockWidget = StockWidget()
+        # self.stockWidget = StockWidget()
 
         # Add widgets to view
         self.add_widget(self.timeWidget)
         self.add_widget(self.quoteWidget)
         self.add_widget(self.weatherWidget)
-        self.add_widget(self.stockWidget)
+        # self.add_widget(self.stockWidget)
 
 class RootLayout(RelativeLayout):
 
