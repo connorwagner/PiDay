@@ -16,6 +16,7 @@ from kivy.uix.boxlayout import BoxLayout
 from ConnectFour import ConnectFour
 from Simon import Simon
 from Othello import Othello
+from TicTacToe import TicTacToe
 
 import time
 import json
@@ -669,9 +670,18 @@ class GamesWidget(RelativeLayout):
         self.add_widget(self.containerClose)
 
         # Bind game buttons to respective launcher functions
+        self.tttButton.bind(on_press=self.openTicTacToe)
         self.othelloButton.bind(on_press=self.openOthello)
-        self.simonButton.bind(on_press=self.openSimon)
+        # on_press=self.openSimon
+        self.simonButton.bind()
         self.connectFourButton.bind(on_press=self.openConnectFour)
+
+    # Opens the TicTacToe popup
+    def openTicTacToe(self, *largs):
+        self.tttWidget = TicTacToeWidget()
+        self.tttPopup = Popup(title="Tic Tac Toe", content=self.tttWidget)
+        self.tttWidget.exitButton.bind(on_press=self.tttPopup.dismiss)
+        self.tttPopup.open()
 
     # Opens the Othello popup
     def openOthello(self, *largs):
@@ -694,6 +704,105 @@ class GamesWidget(RelativeLayout):
         self.connectFourPopup = Popup(title="Connect Four", content=self.connectFourWidget)
         self.connectFourPopup.open()
         self.connectFourWidget.exitButton.bind(on_press=self.connectFourPopup.dismiss)
+
+class TicTacToeWidget(BoxLayout):
+    def __init__(self, *largs, **kwargs):
+        super(TicTacToeWidget, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 7
+
+        # Create the containers for the popup
+        self.boardContainer = BoxLayout(orientation='vertical', spacing=5, size_hint=(0.90, 1))
+        self.leftSideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+
+        self.ttt = TicTacToe()
+
+        # Create control buttons to be put in the side container
+        self.exitButton = Button(text="Exit", halign='right', valign='center')
+        self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
+
+        self.containerList = []
+        self.btnList = []
+
+        # Add buttons to rows in rowsContainer
+        for row in range(3):
+            self.containerList.append(BoxLayout(orientation='horizontal', spacing=5))
+            self.tempList = []
+            for col in range(3):
+                temp = Button(text='X', color=[192, 192, 192, 0.30], halign='right', valign='top', background_normal='atlas://data/images/defaulttheme/button_disabled', font_size=84, on_press=partial(self.playerMoveHelper, row, col))
+                self.containerList[row].add_widget(temp)
+                self.tempList.append(temp)
+            self.btnList.append(self.tempList)
+
+        for container in self.containerList:
+            self.boardContainer.add_widget(container)
+
+        # Add widgets to their respective containers
+        self.leftSideContainer.add_widget(self.exitButton)
+        self.leftSideContainer.add_widget(self.resetButton)
+        self.add_widget(self.leftSideContainer)
+        self.add_widget(self.boardContainer)
+
+    # Helper function for playerMove() (called by pressing a button)
+    def playerMoveHelper(self, row, col, *largs):
+        state = self.ttt.whoseTurn()
+        self.ttt.playerMove(row, col, state)
+
+        # Disable the chosen spot, and set it's text properly
+        self.btnList[row][col].disabled = True
+        if state == 1:
+            self.btnList[row][col].text = "X"
+        else:
+            self.btnList[row][col].text = "O"
+
+        # Code below is used to show whose turn it is / possible moves
+        for x in range(3):
+            for y in range(3):
+                if self.ttt.gameBoard[x][y] == 0:
+                    if state == 2:
+                        self.btnList[x][y].text = "X"
+                    else:
+                        self.btnList[x][y].text = "O"
+
+        self.isWinner(row, col, state)
+
+    # Determines if there is a winner, and displays an appropriate popup if there is
+    def isWinner(self, row, col, state):
+        if self.ttt.isWinner(row, col, state):
+            for row in range(3):
+                for col in range(3):
+                    self.btnList[row][col].disabled = True
+                    if self.ttt.gameBoard[row][col] == 0:
+                        self.btnList[row][col].text = ""
+
+            if state == 1:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Player X Wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                return
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Player O Wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                return
+
+        if self.ttt.getNumSpotsLeft() == 0:
+            self.popupDraw = Popup(title="Game Over", content=Label(text="Draw!!"), size_hint=(0.50, 0.50))
+            self.popupDraw.open()
+
+    # Resets game board and visual board
+    def resetGame(self, *largs):
+        self.ttt.spotsUsed = 0
+        self.ttt.recentState = 1
+        self.ttt.recentCol = 0
+        self.ttt.recentRow = 0
+        self.ttt.winner = -1
+
+        for row in range(3):
+            for col in range(3):
+                self.ttt.gameBoard[row][col] = 0
+                self.btnList[row][col].text = "X"
+                self.btnList[row][col].color = [192, 192, 192, 0.30]
+                self.btnList[row][col].disabled = False
 
 class OthelloWidget(BoxLayout):
     def __init__(self, *largs, **kwargs):
@@ -721,7 +830,7 @@ class OthelloWidget(BoxLayout):
         self.containerList = []
         self.btnList = []
 
-        # Add labels to rows in rowsContainer
+        # Add buttons to rows in rowsContainer
         for row in range(8):
             self.containerList.append(BoxLayout(orientation='horizontal', spacing=1))
             self.tempList = []
@@ -1007,7 +1116,7 @@ class ConnectFourWidget(BoxLayout):
 
         # Create buttons for each column, and place them in list
         for i in range(7):
-            self.btnList.append(Button(text=str(i+1), halign='right', valign='top', on_press=partial(self.playerMoveHelper, i, self.connectFour.whoseTurn())))
+            self.btnList.append(Button(text=str(i+1), halign='right', valign='top', on_press=partial(self.playerMoveHelper, i)))
 
         # Create containers for the connect four game layout
         self.boardContainer = BoxLayout(orientation='vertical', spacing=5, size_hint=(0.90, 1))
@@ -1069,7 +1178,7 @@ class ConnectFourWidget(BoxLayout):
                 button.background_color = [1, 0, 0, 1]
 
     # Helper function for connectFour's playerMove() function
-    def playerMoveHelper(self, col, state, *largs):
+    def playerMoveHelper(self, col, *largs):
 
         # When pressing a control button, if it is the last button in the col, disable the respective control btn
         if self.connectFour.getSpotState(1, col) != 0:
@@ -1136,7 +1245,6 @@ class ControlWidgets(BoxLayout):
         self.gameButton.bind(on_press=self.openGamesWidget)
 
         # Add widgets to view
-
         self.add_widget(self.brightnessWidgets)
         self.add_widget(self.quotaButton)
         self.add_widget(self.gameButton)
@@ -1206,13 +1314,13 @@ class LeftPane(BoxLayout):
         self.timeWidget = TimeWidget()
         self.quoteWidget = QuoteWidget()
         self.weatherWidget = WeatherWidget()
-        # self.stockWidget = StockWidget()
+        self.stockWidget = StockWidget()
 
         # Add widgets to view
         self.add_widget(self.timeWidget)
         self.add_widget(self.quoteWidget)
         self.add_widget(self.weatherWidget)
-        # self.add_widget(self.stockWidget)
+        self.add_widget(self.stockWidget)
 
 class RootLayout(RelativeLayout):
 

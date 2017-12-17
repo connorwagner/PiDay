@@ -157,7 +157,6 @@ class ConnectFour:
             return False
 
     def playerMove(self, col, state):
-        #if self.getSpotState(0, col) != 0:
         self.setMostRecent(col, state)
         return self.setSpotState(col, state)
 

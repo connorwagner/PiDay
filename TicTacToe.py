@@ -3,6 +3,8 @@
 ## TicTacToe
 
 class TicTacToe:
+
+    ## 1: X, 2: Y
     def __init__(self):
         self.gameBoard = []
         self.spotsUsed = 0
@@ -29,13 +31,6 @@ class TicTacToe:
             return 2
         else:
             return 1
-
-    def isValidMove(self, string):
-        if string.isdigit() and len(string) == 2 and (int(string[0]) >= 0 and int(string[0]) <= 2) and (
-        (int(string[1]) >= 0 and int(string[1]) <= 2)):
-            return True
-        else:
-            return False
 
     def isWinner(self, row, col, state):
         if self.checkForThree(row, col, state):
@@ -148,23 +143,9 @@ class TicTacToe:
             return True
         return False
 
-    def playerMove(self, state):
-        move = input("Player " + str(state) + "'s move: ")
-        while (not self.isValidMove(move)):
-            print("Invalid move. Try again!")
-            move = input("Player " + str(state) + "'s move: ")
-        row = int(move[0])
-        col = int(move[1])
-        while (self.getSpotState(row, col) != 0):
-            print("Spot already taken. Try again!")
-            move = input("Player " + str(state) + "'s move: ")
-            while (not self.isValidMove(move)):
-                print("Invalid move. Try again!")
-                move = input("Player " + str(state) + "'s move: ")
-            row = int(move[0])
-            col = int(move[1])
-        self.setSpotState(row, col, state)
+    def playerMove(self, row, col, state):
         self.setMostRecent(row, col, state)
+        self.setSpotState(row, col, state)
 
     def setMostRecent(self, row, col, state):
         self.recentState = state
@@ -174,37 +155,5 @@ class TicTacToe:
     def displayBoard(self):
         for i in range(3):
             print(self.gameBoard[i])
-
-    def gameControl(self):
-        print("Enter your moves in the format of rowCol. Ex: '12' is row 1, column 2")
-        while (not self.isWinner(self.recentRow, self.recentCol, self.recentState)):
-            if (self.getNumSpotsLeft() == 0):
-                print("Draw!!")
-                return
-            self.playerMove(self.whoseTurn())
-            self.displayBoard()
-        print("Player " + str(self.winner) + " Wins!!")
-
-
-ttt = TicTacToe()
-ttt.gameControl()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
