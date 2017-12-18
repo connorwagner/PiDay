@@ -262,7 +262,7 @@ class StockDetailsWidget(BoxLayout):
         for x in range(len(self.stockPriceList)):
             rowContainer = BoxLayout(orientation='horizontal', spacing=10)
             for y in range(5):
-                    rowContainer.add_widget(Label(text=self.stockPriceList[x][y]))
+                rowContainer.add_widget(Label(text=self.stockPriceList[x][y]))
             self.bottomContainer.add_widget(rowContainer)
 
         self.add_widget(self.topContainer)
@@ -303,7 +303,7 @@ class StockDetailsWidget(BoxLayout):
 
             self.accountWorth += float(price) * stockList[2]
 
-            self.stockPriceList.append([str(stockList[0]), gainLossString, "$ " + str(float(price)), "$ " + boughtAtString, str(stockList[2])])
+            self.stockPriceList.append([str(stockList[0]), gainLossString, ("$ %.2f" % float(price)), "$ " + boughtAtString, str(stockList[2])])
 
 class DaySelector(BoxLayout):
 
