@@ -176,12 +176,12 @@ class StockWidget(RelativeLayout):
         self.recur = None
 
         # Initialize label
-        self.stockLabel = Label(text='Stocks here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
+        self.stockButton = Button(background_color=[0, 0, 0, 1], on_press=self.openStockDetailsWidget, text='Stocks here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
 
         self.updateStocks()
 
         # Add label to view
-        self.add_widget(self.stockLabel)
+        self.add_widget(self.stockButton)
 
     def startTimer(self):
         # Update stock data every 5 minutes (5 minutes * 60 seconds = 300 seconds)
@@ -212,7 +212,98 @@ class StockWidget(RelativeLayout):
         self.updateUI()
 
     def updateUI(self):
-        self.stockLabel.text = self.stockString
+        self.stockButton.text = self.stockString
+
+    def openStockDetailsWidget(self, *largs):
+        self.stockDetailsWidget = StockDetailsWidget()
+
+        self.popup = Popup(title="Stock Details", content=self.stockDetailsWidget)
+        self.stockDetailsWidget.closeButton.bind(on_press=self.popup.dismiss)
+        self.popup.open()
+
+class StockDetailsWidget(BoxLayout):
+    def __init__(self, **kwargs):
+        super(StockDetailsWidget, self).__init__(**kwargs)
+
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        self.stockPriceList = []
+        self.accountGainLoss = 0
+        self.accountWorth = 0
+
+        self.loadStocks()
+
+        self.topContainer = BoxLayout(orientation='horizontal', spacing=10, size_hint=(1, 0.15))
+        self.bottomContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(1, 0.70))
+        self.closeButton = Button(text="Close", halign='center', valign='center', size_hint=(1, 0.15))
+
+        if self.accountGainLoss < 0:
+            self.accountGainLossLabel = Label(text="Account Loss: $ " + str("%.2f" % abs(self.accountGainLoss)))
+        else:
+            self.accountGainLossLabel = Label(text="Account Gain: $ " + str("%.2f" % abs(self.accountGainLoss)))
+
+        if self.accountWorth < 0:
+            self.accountWorthLabel = Label(text="Account Worth: - $ " + str("%.2f" % abs(self.accountWorth)))
+        else:
+            self.accountWorthLabel = Label(text="Account Worth: $ " + str("%.2f" % self.accountWorth))
+
+        self.topContainer.add_widget(self.accountWorthLabel)
+        self.topContainer.add_widget(self.accountGainLossLabel)
+
+        self.tempContainer = BoxLayout(orientation='horizontal', spacing=10)
+        self.tempContainer.add_widget(Label(text="Stock Symbol:"))
+        self.tempContainer.add_widget(Label(text="Gain/Loss:"))
+        self.tempContainer.add_widget(Label(text="Current Value:"))
+        self.tempContainer.add_widget(Label(text="Bought at:"))
+        self.tempContainer.add_widget(Label(text="Owned:"))
+        self.bottomContainer.add_widget(self.tempContainer)
+
+        for x in range(len(self.stockPriceList)):
+            rowContainer = BoxLayout(orientation='horizontal', spacing=10)
+            for y in range(5):
+                    rowContainer.add_widget(Label(text=self.stockPriceList[x][y]))
+            self.bottomContainer.add_widget(rowContainer)
+
+        self.add_widget(self.topContainer)
+        self.add_widget(self.bottomContainer)
+        self.add_widget(self.closeButton)
+
+    def loadStocks(self, *largs):
+        # Get list of stocks desired from config file
+        stocksListOfLists = getStocks()
+        for stockList in stocksListOfLists:
+            # Get price for desired stock and add it to the string for the label
+            jsonData = makeHTTPRequest(
+                'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&interval=5min&outputsize=compact&symbol=' +
+                stockList[0] + '&apikey=DBC2MS0TUABOLZ04')
+
+            # If makeHTTPRequest returns False then there was an error, end the function
+            if not jsonData:
+                break
+
+            data = json.loads(jsonData)
+            mostRecentUpdate = data['Meta Data']['3. Last Refreshed']
+            price = data['Time Series (5min)'][mostRecentUpdate]['4. close']
+
+            # Append an extra 0 if bought at "50.0" for example, so it shows "50.00"
+            boughtAtString = str(stockList[1])
+            boughtAtInt = int(stockList[1])
+            if float(boughtAtInt) == stockList[1]:
+                boughtAtString += "0"
+
+            gainLossString = ""
+            gainLoss = (float(price) - float(stockList[1])) * stockList[2]
+            if gainLoss < 0:
+                gainLossString = "- $ " + str("%.2f" % abs(gainLoss))
+            else:
+                gainLossString = "+ $ " + str("%.2f" % abs(gainLoss))
+
+            self.accountGainLoss += gainLoss
+
+            self.accountWorth += float(price) * stockList[2]
+
+            self.stockPriceList.append([str(stockList[0]), gainLossString, "$ " + str(float(price)), "$ " + boughtAtString, str(stockList[2])])
 
 class DaySelector(BoxLayout):
 
