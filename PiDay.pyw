@@ -2,6 +2,7 @@ import kivy
 kivy.require('1.0.6')
 
 from kivy.app import App
+from kivy.config import Config
 from kivy.clock import Clock
 from kivy.uix.popup import Popup
 from kivy.uix.progressbar import ProgressBar
@@ -201,10 +202,13 @@ class StockWidget(RelativeLayout):
                 break
 
             data = json.loads(jsonData)
-            mostRecentUpdate = data['Meta Data']['3. Last Refreshed']
-            price = data['Time Series (5min)'][mostRecentUpdate]['4. close']
+            try:
+                mostRecentUpdate = data['Meta Data']['3. Last Refreshed']
+                price = data['Time Series (5min)'][mostRecentUpdate]['4. close']
 
-            pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
+                pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
+            except:
+                print("error retrieving stocks")
 
         # Remove trailing newline character
         self.stockString = pricesStr[:-1]
