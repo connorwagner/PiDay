@@ -672,8 +672,7 @@ class GamesWidget(RelativeLayout):
         # Bind game buttons to respective launcher functions
         self.tttButton.bind(on_press=self.openTicTacToe)
         self.othelloButton.bind(on_press=self.openOthello)
-        # on_press=self.openSimon
-        self.simonButton.bind()
+        self.simonButton.bind(on_press=self.openSimon)
         self.connectFourButton.bind(on_press=self.openConnectFour)
 
     # Opens the TicTacToe popup
