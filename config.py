@@ -1,10 +1,10 @@
 # Return iCloud username (email)
 def getUsername():
-    return 'connorawagner531@gmail.com'
+    return ''
 
 # Return iCloud password
 def getPassword():
-    password = 'bdÆäÌdj`¤B'
+    password = ''
     for i in range(len(password)):
         ch = ord(password[i]) // 2
         password = password[:i] + chr(ch) + password[i+1:]
@@ -35,12 +35,12 @@ def getStocks():
 
 # Return weather locale string, in the format City,ST,[CN]
 def getWeatherLocale():
-    return 'Upland,IN,US'
+    return ''
 
 # Return a list of pGuid's of calendars that should not be displayed
 def getCalendarExceptions():
-    return ['C7C9B5E0-3EB9-4549-8089-B84CAFD60B03']
+    return ['']
 
 # Return a curl command as a string
 def getQuotaCurl():
-    return "curl 'http://quota.taylor.edu/cgi-bin/graph.py?range=' -H 'Host: quota.taylor.edu' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:56.0) Gecko/20100101 Firefox/56.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H 'Referer: http://quota.taylor.edu/?login=y' -H 'Cookie: PHPSESSID=ST-54539-e4jNnrWfEYJUzkYOVVGS-ssotayloredu; pycas=fba5adcc1516224183:connor_wagner' -H 'Connection: keep-alive' -H 'Cache-Control: max-age=0'"
+    return ""
