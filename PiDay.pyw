@@ -32,15 +32,17 @@ from config import getUsername, getPassword, getStocks, getWeatherLocale, getCal
 
 class TimeWidget(RelativeLayout):
 
-    def __init__(self, **kwargs):
+    def __init__(self, timedUpdates, **kwargs):
         super(TimeWidget, self).__init__(**kwargs)
 
         # Initialize labels
         self.timeLabel = Label(text='12:34 AP', font_size='42', halign='center', valign='center', pos_hint={'x': 0, 'y': 0.25}, size_hint=(1, 0.8))
         self.dateLabel = Label(text='Month 12', font_size='20', halign='center', valign='center', pos_hint={'x': 0, 'y': 0.2}, size_hint=(1, 0.2))
 
-        # Update clock every 30 seconds
-        Clock.schedule_interval(self.updateTime, 30)
+        self.timedUpdates = timedUpdates
+
+        # Update clock every second 
+        Clock.schedule_interval(self.updateTime, 1)
 
         # Add labels to view
         self.add_widget(self.timeLabel)
@@ -49,6 +51,13 @@ class TimeWidget(RelativeLayout):
     def updateTime(self, *largs):
         self.timeLabel.text = time.strftime("%-I:%M %p")
         self.dateLabel.text = time.strftime("%B %-d")
+
+        now = datetime.now()
+        secondsSinceMidnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+        for updateFrequency in self.timedUpdates:
+            if secondsSinceMidnight % updateFrequency == 0:
+                for updateFun in self.timedUpdates[updateFrequency]:
+                    updateFun()
 
 class QuoteWidget(BoxLayout):
 
@@ -69,18 +78,9 @@ class QuoteWidget(BoxLayout):
         self.quoteLabel.text_size = (self.quoteLabel.width, None)
         self.quoteLabel.size_hint = (1, None)
 
-        self.updateUI()
+        self.timerFun()
 
-    def startTimer(self):
-        # Set timer to update quote at midnight
-        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
-
-    def updateUIFirstTime(self, *largs):
-        # Update quote every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        self.recur = Clock.schedule_interval(self.updateUI, 86400)
-        self.updateUI()
-
-    def updateUI(self, *largs):
+    def timerFun(self, *largs):
         # Get quote from API call
         quote = makeHTTPRequest("http://ron-swanson-quotes.herokuapp.com/v2/quotes")
 
@@ -104,21 +104,16 @@ class WeatherWidget(RelativeLayout):
 
         # Initialize data variables
         self.weatherString = ""
-        self.recur = None
 
         # Initialize label
         self.weatherLabel = Label(text='Weather here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
 
-        self.updateWeather()
+        self.timerFun()
 
         # Add label to view
         self.add_widget(self.weatherLabel)
 
-    def startTimer(self):
-        # Update weather every 15 minutes (15 minutes * 60 seconds = 900 seconds)
-        self.recur = Clock.schedule_interval(self.updateWeather, 900)
-
-    def updateWeather(self, *largs):
+    def timerFun(self, *largs):
         # API key: 533616ff356c7a5963e935e12fbb9306
         # Lat / long: 40.4644155 / -85.5111644
         # City ID for Upland: 4927510
@@ -184,16 +179,12 @@ class StockWidget(RelativeLayout):
         # Initialize label
         self.stockButton = Button(background_color=[0, 0, 0, 1], on_press=self.openStockDetailsWidget, text='Stocks here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
 
-        self.updateStocks()
+        self.timerFun()
 
         # Add label to view
         self.add_widget(self.stockButton)
 
-    def startTimer(self):
-        # Update stock data every 5 minutes (5 minutes * 60 seconds = 300 seconds)
-        self.recur = Clock.schedule_interval(self.updateStocks, 300)
-
-    def updateStocks(self, *largs):
+    def timerFun(self, *largs):
         # Get list of stocks desired from config file
         stocksListOfLists = getStocks()
         pricesStr = str()
@@ -328,21 +319,10 @@ class DaySelector(BoxLayout):
         self.dayAdjustment = int(time.strftime("%w"))
         self.selectedDay = 0
         self.calendarObject = calendarObject
-        self.recur = None
 
-        self.updateUI()
+        self.timerFun()
 
-    def startTimer(self):
-        # Set timer to update quote at midnight
-        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
-
-    def updateUIFirstTime(self, *largs):
-        # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        self.recur = Clock.schedule_interval(self.updateUI, 86400)
-
-        self.updateUI()
-
-    def updateUI(self, *largs):
+    def timerFun(self, *largs):
         self.dayAdjustment = int(time.strftime("%w"))
 
         # Remove all existing widgets
@@ -422,7 +402,6 @@ class CalendarWidget(BoxLayout):
         self.twoFactorDone = False
         self.twoFactorScreen = None
         self.icloudApi = None
-        self.recur = None
 
         # Initialize data variables
         self.daySeparatedEventList = []
@@ -433,14 +412,7 @@ class CalendarWidget(BoxLayout):
 
     def finishInitSetup(self):
         # Get calendar data
-        self.getData()
-
-        # Add widgets to view
-        self.updateUI()
-
-    def startTimer(self):
-        # Set timer to update widget at midnight
-        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
+        self.timerFun()
 
     def authenticate(self):
         self.icloudApi = PyiCloudService(getUsername(), getPassword())
@@ -449,14 +421,7 @@ class CalendarWidget(BoxLayout):
         else:
             self.finishInitSetup()
 
-    def updateUIFirstTime(self, *largs):
-        # Update widget every 30 minutes (30 minutes * 60 seconds = 1800 seconds)
-        self.recur = Clock.schedule_interval(self.getData, 1800)
-        self.daySelector.startTimer()
-
-        self.getData()
-
-    def getData(self, *largs):
+    def timerFun(self, *largs):
         now = datetime.now()
 
         # Get list of exceptions from config
@@ -1330,7 +1295,7 @@ class MiddlePane(BoxLayout):
 
 class LeftPane(BoxLayout):
 
-    def __init__(self, **kwargs):
+    def __init__(self, middlePane, **kwargs):
         super(LeftPane, self).__init__(**kwargs)
 
         # Configure LeftPane object
@@ -1338,10 +1303,14 @@ class LeftPane(BoxLayout):
         self.spacing = 10
 
         # Create widgets
-        self.timeWidget = TimeWidget()
         self.quoteWidget = QuoteWidget()
         self.weatherWidget = WeatherWidget()
         self.stockWidget = StockWidget()
+
+        timedUpdates = {86400: [self.quoteWidget.timerFun, middlePane.calendarWidget.daySelector.timerFun],
+                     300: [self.stockWidget.timerFun, self.weatherWidget.timerFun],
+                     1800: [middlePane.calendarWidget.timerFun]}
+        self.timeWidget = TimeWidget(timedUpdates)
 
         # Add widgets to view
         self.add_widget(self.timeWidget)
@@ -1355,9 +1324,10 @@ class RootLayout(RelativeLayout):
         super(RootLayout, self).__init__(**kwargs)
 
         # Configure display panes
-        self.leftPane = LeftPane(pos_hint={'x': 0, 'y': 0}, size_hint=(0.25, 1))
         self.middlePane = MiddlePane(pos_hint={'x': 0.25, 'y': 0}, size_hint=(0.63, 1))
         self.rightPane = RightPane(pos_hint={'x': 0.88, 'y': 0}, size_hint=(0.12, 1))
+
+        self.leftPane = LeftPane(self.middlePane, pos_hint={'x': 0, 'y': 0}, size_hint=(0.25, 1))
 
         # Add panes to view
         self.add_widget(self.leftPane)
@@ -1377,14 +1347,6 @@ class PiDay(App):
 
     def on_start(self):
         self.rootLayout.middlePane.calendarWidget.authenticate()
-
-        self.root_window.bind(on_show=self.startMidnightTimers)
-
-    def startMidnightTimers(self):
-        print("Running")
-        self.rootLayout.leftPane.stockWidget.startTimer()
-        self.rootLayout.leftPane.weatherWidget.startTimer()
-        self.rootLayout.leftPane.quoteWidget.startTimer()
 
 # Helper classes and functions
 # TODO: Make this work
