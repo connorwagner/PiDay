@@ -55,7 +55,7 @@ class TimeWidget(RelativeLayout):
         now = datetime.now()
         secondsSinceMidnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
         for updateFrequency in self.timedUpdates:
-            if secondsSinceMidnight % updateFrequency == 0:
+            if secondsSinceMidnight % updateFrequency < 3:
                 for updateFun in self.timedUpdates[updateFrequency]:
                     updateFun()
 
@@ -880,7 +880,7 @@ class OthelloWidget(BoxLayout):
         self.blackTokenButton.text = str(self.othello.twoCtr)
         self.whiteTokenButton.text = str(self.othello.oneCtr)
         self.whoseTurnButton.background_color = [0, 0, 0, 1]
-        self.whoseTurnButton.color = [60, 179, 113, 1]
+        self.whoseTurnButton.color = [1, 1, 1, 1]
 
     # Helper function called when a placeButton is pressed
     def playerMoveHelper(self, row, col, state, *largs):
@@ -905,7 +905,7 @@ class OthelloWidget(BoxLayout):
             self.btnList[row][col].background_color = [0, 0, 0, 1]
         else:
             self.whoseTurnButton.background_color = [0, 0, 0, 1]
-            self.whoseTurnButton.color = [60, 179, 113, 1]
+            self.whoseTurnButton.color = [1, 1, 1, 1]
             self.btnList[row][col].background_color = [60, 179, 113, 1]
 
         # Update the # of tokens there are currently on the buttons
