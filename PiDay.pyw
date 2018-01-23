@@ -188,23 +188,29 @@ class StockWidget(RelativeLayout):
         # Get list of stocks desired from config file
         stocksListOfLists = getStocks()
         pricesStr = str()
+
+        stocksListStr = str()
         for stockList in stocksListOfLists:
-            # Get price for desired stock and add it to the string for the label
-            jsonData = makeHTTPRequest('https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&interval=5min&outputsize=compact&symbol=' + stockList[0] + '&apikey=DBC2MS0TUABOLZ04')
+            stocksListStr += stockList[0] + ','
+        stocksListStr = stocksListStr[:-1]
 
-            # If makeHTTPRequest returns False then there was an error, end the function
-            if not jsonData:
-                pricesStr = "Error retrieving data "
-                break
+        # Get price for desired stocks and add them to the string for the label
+        jsonData = makeHTTPRequest('https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=' + stocksListStr + '&apikey=DBC2MS0TUABOLZ04')
 
-            data = json.loads(jsonData)
-            try:
-                mostRecentUpdate = data['Meta Data']['3. Last Refreshed']
-                price = data['Time Series (5min)'][mostRecentUpdate]['4. close']
+        # If makeHTTPRequest returns False then there was an error, end the function
+        if not jsonData:
+            pricesStr = "Error retrieving data"
+            self.updateUI()
+            return
 
-                pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
-            except:
-                print("error retrieving stocks")
+        data = json.loads(jsonData)
+        try:
+            for stockInfo in data["Stock Quotes"]:
+                pricesStr += "%s: $%.2f\n" % (stockInfo["1. symbol"], float(stockInfo["2. price"]))
+        except:
+            pricesStr = "Error retrieving data"
+            self.updateUI()
+            return
 
         # Remove trailing newline character
         self.stockString = pricesStr[:-1]
@@ -270,40 +276,44 @@ class StockDetailsWidget(BoxLayout):
         self.add_widget(self.closeButton)
 
     def loadStocks(self, *largs):
-        # Get list of stocks desired from config file
         stocksListOfLists = getStocks()
+        stocksListStr = str()
         for stockList in stocksListOfLists:
-            # Get price for desired stock and add it to the string for the label
-            jsonData = makeHTTPRequest(
-                'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&interval=5min&outputsize=compact&symbol=' +
-                stockList[0] + '&apikey=DBC2MS0TUABOLZ04')
+            stocksListStr += stockList[0] + ','
+        stocksListStr = stocksListStr[:-1]
 
-            # If makeHTTPRequest returns False then there was an error, end the function
-            if not jsonData:
-                break
+        # Get price for desired stocks and add them to the string for the label
+        jsonData = makeHTTPRequest('https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=' + stocksListStr + '&apikey=DBC2MS0TUABOLZ04')
+        data = json.loads(jsonData)
 
-            data = json.loads(jsonData)
-            mostRecentUpdate = data['Meta Data']['3. Last Refreshed']
-            price = data['Time Series (5min)'][mostRecentUpdate]['4. close']
+        #try:
+        for stockInfo in data["Stock Quotes"]:
+            for stockList in stocksListOfLists:
+                if stockList[0] != stockInfo["1. symbol"]:
+                    continue
 
-            # Append an extra 0 if bought at "50.0" for example, so it shows "50.00"
-            boughtAtString = str(stockList[1])
-            boughtAtInt = int(stockList[1])
-            if float(boughtAtInt) == stockList[1]:
-                boughtAtString += "0"
+                boughtAtString = str(stockList[1])
+                boughtAtInt = int(stockList[1])
+                if float(boughtAtInt) == stockList[1]:
+                    boughtAtString += "0"
 
-            gainLossString = ""
-            gainLoss = (float(price) - float(stockList[1])) * stockList[2]
-            if gainLoss < 0:
-                gainLossString = "- $ " + str("%.2f" % abs(gainLoss))
-            else:
-                gainLossString = "+ $ " + str("%.2f" % abs(gainLoss))
+                price = stockInfo["2. price"]
+                gainLossString = ""
+                gainLoss = (float(price) - float(stockList[1])) * stockList[2]
+                if gainLoss < 0:
+                    gainLossString = "- $ " + str("%.2f" % abs(gainLoss))
+                else:
+                    gainLossString = "+ $ " + str("%.2f" % abs(gainLoss))
 
-            self.accountGainLoss += gainLoss
+                self.accountGainLoss += gainLoss
 
-            self.accountWorth += float(price) * stockList[2]
+                self.accountWorth += float(price) * stockList[2]
 
-            self.stockPriceList.append([str(stockList[0]), gainLossString, ("$ %.2f" % float(price)), "$ " + boughtAtString, str(stockList[2])])
+                self.stockPriceList.append([str(stockList[0]), gainLossString, ("$ %.2f" % float(price)), "$ " + boughtAtString, str(stockList[2])])
+#        except:
+#            pricesStr = "Error retrieving data"
+#            self.updateUI()
+#            return
 
 class DaySelector(BoxLayout):
 
