@@ -55,7 +55,7 @@ class TimeWidget(RelativeLayout):
         now = datetime.now()
         secondsSinceMidnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
         for updateFrequency in self.timedUpdates:
-            if secondsSinceMidnight % updateFrequency < 3:
+            if secondsSinceMidnight % updateFrequency < 1:
                 for updateFun in self.timedUpdates[updateFrequency]:
                     updateFun()
 
@@ -326,17 +326,15 @@ class DaySelector(BoxLayout):
         self.dayAdjustment = int(time.strftime("%w"))
 
         # Remove all existing widgets
-        for child in self.children:
-            self.remove_widget(child)
-
-        # Add and activate first button
-        btn1 = ToggleButton(text=self.dayList[self.dayAdjustment % len(self.dayList)], group='daySelector', state='down')
-        btn1.bind(on_press=self.dayChanged)
-        self.add_widget(btn1)
+        self.clear_widgets()
 
         # Add all other buttons
-        for i in range(1, len(self.dayList)):
-            btn = ToggleButton(text=self.dayList[(i + self.dayAdjustment) % len(self.dayList)], group='daySelector')
+        for i in range(0, len(self.dayList)):
+            btn = None
+            if i == self.selectedDay:
+                btn = ToggleButton(text=self.dayList[self.dayAdjustment % len(self.dayList)], group='daySelector', state='down')
+            else:
+                btn = ToggleButton(text=self.dayList[(i + self.dayAdjustment) % len(self.dayList)], group='daySelector')
             btn.bind(on_press=self.dayChanged)
             self.add_widget(btn)
 
@@ -1063,7 +1061,6 @@ class SimonWidget(BoxLayout):
 
     # Iterates through gameColors, and displays each color in that order
     def displayOrder(self):
-        print("displaying order of buttons")
         order = self.simon.colorList
         for i in range(len(order)):
             if order[i] == "G":
