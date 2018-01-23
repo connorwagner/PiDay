@@ -13,6 +13,11 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.boxlayout import BoxLayout
 
+from ConnectFour import ConnectFour
+from Simon import Simon
+from Othello import Othello
+from TicTacToe import TicTacToe
+
 import time
 import json
 import urllib.request
@@ -27,15 +32,17 @@ from config import getUsername, getPassword, getStocks, getWeatherLocale, getCal
 
 class TimeWidget(RelativeLayout):
 
-    def __init__(self, **kwargs):
+    def __init__(self, timedUpdates, **kwargs):
         super(TimeWidget, self).__init__(**kwargs)
 
         # Initialize labels
         self.timeLabel = Label(text='12:34 AP', font_size='42', halign='center', valign='center', pos_hint={'x': 0, 'y': 0.25}, size_hint=(1, 0.8))
         self.dateLabel = Label(text='Month 12', font_size='20', halign='center', valign='center', pos_hint={'x': 0, 'y': 0.2}, size_hint=(1, 0.2))
 
-        # Update clock every 30 seconds
-        Clock.schedule_interval(self.updateTime, 30)
+        self.timedUpdates = timedUpdates
+
+        # Update clock every second 
+        Clock.schedule_interval(self.updateTime, 1)
 
         # Add labels to view
         self.add_widget(self.timeLabel)
@@ -44,6 +51,13 @@ class TimeWidget(RelativeLayout):
     def updateTime(self, *largs):
         self.timeLabel.text = time.strftime("%-I:%M %p")
         self.dateLabel.text = time.strftime("%B %-d")
+
+        now = datetime.now()
+        secondsSinceMidnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+        for updateFrequency in self.timedUpdates:
+            if secondsSinceMidnight % updateFrequency < 1:
+                for updateFun in self.timedUpdates[updateFrequency]:
+                    updateFun()
 
 class QuoteWidget(BoxLayout):
 
@@ -64,18 +78,9 @@ class QuoteWidget(BoxLayout):
         self.quoteLabel.text_size = (self.quoteLabel.width, None)
         self.quoteLabel.size_hint = (1, None)
 
-        self.updateUI()
+        self.timerFun()
 
-    def startTimer(self):
-        # Set timer to update quote at midnight
-        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
-
-    def updateUIFirstTime(self, *largs):
-        # Update quote every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        self.recur = Clock.schedule_interval(self.updateUI, 86400)
-        self.updateUI()
-
-    def updateUI(self, *largs):
+    def timerFun(self, *largs):
         # Get quote from API call
         quote = makeHTTPRequest("http://ron-swanson-quotes.herokuapp.com/v2/quotes")
 
@@ -99,21 +104,16 @@ class WeatherWidget(RelativeLayout):
 
         # Initialize data variables
         self.weatherString = ""
-        self.recur = None
 
         # Initialize label
         self.weatherLabel = Label(text='Weather here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
 
-        self.updateWeather()
+        self.timerFun()
 
         # Add label to view
         self.add_widget(self.weatherLabel)
 
-    def startTimer(self):
-        # Update weather every 15 minutes (15 minutes * 60 seconds = 900 seconds)
-        self.recur = Clock.schedule_interval(self.updateWeather, 900)
-
-    def updateWeather(self, *largs):
+    def timerFun(self, *largs):
         # API key: 533616ff356c7a5963e935e12fbb9306
         # Lat / long: 40.4644155 / -85.5111644
         # City ID for Upland: 4927510
@@ -179,36 +179,38 @@ class StockWidget(RelativeLayout):
         # Initialize label
         self.stockButton = Button(background_color=[0, 0, 0, 1], on_press=self.openStockDetailsWidget, text='Stocks here', halign='center', valign='center', pos_hint={'x': 0, 'y': 0}, size_hint=(1, 1))
 
-        self.updateStocks()
+        self.timerFun()
 
         # Add label to view
         self.add_widget(self.stockButton)
 
-    def startTimer(self):
-        # Update stock data every 5 minutes (5 minutes * 60 seconds = 300 seconds)
-        self.recur = Clock.schedule_interval(self.updateStocks, 300)
-
-    def updateStocks(self, *largs):
+    def timerFun(self, *largs):
         # Get list of stocks desired from config file
         stocksListOfLists = getStocks()
         pricesStr = str()
+
+        stocksListStr = str()
         for stockList in stocksListOfLists:
-            # Get price for desired stock and add it to the string for the label
-            jsonData = makeHTTPRequest('https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&interval=5min&outputsize=compact&symbol=' + stockList[0] + '&apikey=DBC2MS0TUABOLZ04')
+            stocksListStr += stockList[0] + ','
+        stocksListStr = stocksListStr[:-1]
 
-            # If makeHTTPRequest returns False then there was an error, end the function
-            if not jsonData:
-                pricesStr = "Error retrieving data "
-                break
+        # Get price for desired stocks and add them to the string for the label
+        jsonData = makeHTTPRequest('https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=' + stocksListStr + '&apikey=DBC2MS0TUABOLZ04')
 
-            data = json.loads(jsonData)
-            try:
-                mostRecentUpdate = data['Meta Data']['3. Last Refreshed']
-                price = data['Time Series (5min)'][mostRecentUpdate]['4. close']
+        # If makeHTTPRequest returns False then there was an error, end the function
+        if not jsonData:
+            pricesStr = "Error retrieving data"
+            self.updateUI()
+            return
 
-                pricesStr += "%s: $%.2f\n" % (stockList[0], float(price))
-            except:
-                print("error retrieving stocks")
+        data = json.loads(jsonData)
+        try:
+            for stockInfo in data["Stock Quotes"]:
+                pricesStr += "%s: $%.2f\n" % (stockInfo["1. symbol"], float(stockInfo["2. price"]))
+        except:
+            pricesStr = "Error retrieving data"
+            self.updateUI()
+            return
 
         # Remove trailing newline character
         self.stockString = pricesStr[:-1]
@@ -274,40 +276,44 @@ class StockDetailsWidget(BoxLayout):
         self.add_widget(self.closeButton)
 
     def loadStocks(self, *largs):
-        # Get list of stocks desired from config file
         stocksListOfLists = getStocks()
+        stocksListStr = str()
         for stockList in stocksListOfLists:
-            # Get price for desired stock and add it to the string for the label
-            jsonData = makeHTTPRequest(
-                'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&interval=5min&outputsize=compact&symbol=' +
-                stockList[0] + '&apikey=DBC2MS0TUABOLZ04')
+            stocksListStr += stockList[0] + ','
+        stocksListStr = stocksListStr[:-1]
 
-            # If makeHTTPRequest returns False then there was an error, end the function
-            if not jsonData:
-                break
+        # Get price for desired stocks and add them to the string for the label
+        jsonData = makeHTTPRequest('https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=' + stocksListStr + '&apikey=DBC2MS0TUABOLZ04')
+        data = json.loads(jsonData)
 
-            data = json.loads(jsonData)
-            mostRecentUpdate = data['Meta Data']['3. Last Refreshed']
-            price = data['Time Series (5min)'][mostRecentUpdate]['4. close']
+        #try:
+        for stockInfo in data["Stock Quotes"]:
+            for stockList in stocksListOfLists:
+                if stockList[0] != stockInfo["1. symbol"]:
+                    continue
 
-            # Append an extra 0 if bought at "50.0" for example, so it shows "50.00"
-            boughtAtString = str(stockList[1])
-            boughtAtInt = int(stockList[1])
-            if float(boughtAtInt) == stockList[1]:
-                boughtAtString += "0"
+                boughtAtString = str(stockList[1])
+                boughtAtInt = int(stockList[1])
+                if float(boughtAtInt) == stockList[1]:
+                    boughtAtString += "0"
 
-            gainLossString = ""
-            gainLoss = (float(price) - float(stockList[1])) * stockList[2]
-            if gainLoss < 0:
-                gainLossString = "- $ " + str("%.2f" % abs(gainLoss))
-            else:
-                gainLossString = "+ $ " + str("%.2f" % abs(gainLoss))
+                price = stockInfo["2. price"]
+                gainLossString = ""
+                gainLoss = (float(price) - float(stockList[1])) * stockList[2]
+                if gainLoss < 0:
+                    gainLossString = "- $ " + str("%.2f" % abs(gainLoss))
+                else:
+                    gainLossString = "+ $ " + str("%.2f" % abs(gainLoss))
 
-            self.accountGainLoss += gainLoss
+                self.accountGainLoss += gainLoss
 
-            self.accountWorth += float(price) * stockList[2]
+                self.accountWorth += float(price) * stockList[2]
 
-            self.stockPriceList.append([str(stockList[0]), gainLossString, ("$ %.2f" % float(price)), "$ " + boughtAtString, str(stockList[2])])
+                self.stockPriceList.append([str(stockList[0]), gainLossString, ("$ %.2f" % float(price)), "$ " + boughtAtString, str(stockList[2])])
+#        except:
+#            pricesStr = "Error retrieving data"
+#            self.updateUI()
+#            return
 
 class DaySelector(BoxLayout):
 
@@ -323,35 +329,22 @@ class DaySelector(BoxLayout):
         self.dayAdjustment = int(time.strftime("%w"))
         self.selectedDay = 0
         self.calendarObject = calendarObject
-        self.recur = None
 
-        self.updateUI()
+        self.timerFun()
 
-    def startTimer(self):
-        # Set timer to update quote at midnight
-        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
-
-    def updateUIFirstTime(self, *largs):
-        # Update widget every 24 hours (24 hours * 60 minutes * 60 seconds = 86400 seconds)
-        self.recur = Clock.schedule_interval(self.updateUI, 86400)
-
-        self.updateUI()
-
-    def updateUI(self, *largs):
+    def timerFun(self, *largs):
         self.dayAdjustment = int(time.strftime("%w"))
 
         # Remove all existing widgets
-        for child in self.children:
-            self.remove_widget(child)
-
-        # Add and activate first button
-        btn1 = ToggleButton(text=self.dayList[self.dayAdjustment % len(self.dayList)], group='daySelector', state='down')
-        btn1.bind(on_press=self.dayChanged)
-        self.add_widget(btn1)
+        self.clear_widgets()
 
         # Add all other buttons
-        for i in range(1, len(self.dayList)):
-            btn = ToggleButton(text=self.dayList[(i + self.dayAdjustment) % len(self.dayList)], group='daySelector')
+        for i in range(0, len(self.dayList)):
+            btn = None
+            if i == self.selectedDay:
+                btn = ToggleButton(text=self.dayList[self.dayAdjustment % len(self.dayList)], group='daySelector', state='down')
+            else:
+                btn = ToggleButton(text=self.dayList[(i + self.dayAdjustment) % len(self.dayList)], group='daySelector')
             btn.bind(on_press=self.dayChanged)
             self.add_widget(btn)
 
@@ -417,7 +410,6 @@ class CalendarWidget(BoxLayout):
         self.twoFactorDone = False
         self.twoFactorScreen = None
         self.icloudApi = None
-        self.recur = None
 
         # Initialize data variables
         self.daySeparatedEventList = []
@@ -428,14 +420,7 @@ class CalendarWidget(BoxLayout):
 
     def finishInitSetup(self):
         # Get calendar data
-        self.getData()
-
-        # Add widgets to view
-        self.updateUI()
-
-    def startTimer(self):
-        # Set timer to update widget at midnight
-        self.recur = Clock.schedule_once(self.updateUIFirstTime, getTimeToMidnight())
+        self.timerFun()
 
     def authenticate(self):
         self.icloudApi = PyiCloudService(getUsername(), getPassword())
@@ -444,14 +429,7 @@ class CalendarWidget(BoxLayout):
         else:
             self.finishInitSetup()
 
-    def updateUIFirstTime(self, *largs):
-        # Update widget every 30 minutes (30 minutes * 60 seconds = 1800 seconds)
-        self.recur = Clock.schedule_interval(self.getData, 1800)
-        self.daySelector.startTimer()
-
-        self.getData()
-
-    def getData(self, *largs):
+    def timerFun(self, *largs):
         now = datetime.now()
 
         # Get list of exceptions from config
@@ -511,7 +489,7 @@ class BrightnessWidgets(BoxLayout):
         # Initialize variables
         self.isDark = False
         self.darkTitle = "Go Dark"
-        self.brightTitle = "Turn It Up"
+        self.brightTitle = "Go Bright"
 
         # Create button
         self.button = Button(text=self.darkTitle, halign='center', valign='center')
@@ -632,6 +610,615 @@ class QuotaWidget(BoxLayout):
         with open('%s/weeklyQuota.png' % self.workingDir, 'w') as file:
             subprocess.call(weeklyCurl, stdout=file)
 
+class GamesWidget(RelativeLayout):
+
+    def __init__(self, **kwargs):
+        super(GamesWidget, self).__init__(**kwargs)
+
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        # Make the gameWidget containers (will hold rows of game buttons)
+        self.containerTop = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0.60}, size_hint=(1, 0.40))
+        self.containerBottom = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0.17}, size_hint=(1, 0.40))
+        self.containerClose = BoxLayout(orientation='horizontal', spacing=10, pos_hint={'x': 0, 'y': 0})
+
+        self.othelloButton = Button(text="Othello", halign='center', valign='center')
+        self.connectFourButton = Button(text="Connect Four", halign='center', valign='center')
+        self.tttButton = Button(text="TicTacToe", halign='center', valign='center')
+        self.simonButton = Button(text="Simon", halign='center', valign='center')
+
+        self.closeButton = Button(text="Close", halign='right', valign='center', size_hint=(1, 0.15))
+
+        # Top row will contain TicTacToe, and Connect Four
+        # Bottom row will contain Othello and Simon
+        self.containerTop.add_widget(self.tttButton)
+        self.containerTop.add_widget(self.connectFourButton)
+        self.containerBottom.add_widget(self.othelloButton)
+        self.containerBottom.add_widget(self.simonButton)
+        self.containerClose.add_widget(self.closeButton)
+
+        self.add_widget(self.containerTop)
+        self.add_widget(self.containerBottom)
+        self.add_widget(self.containerClose)
+
+        # Bind game buttons to respective launcher functions
+        self.tttButton.bind(on_press=self.openTicTacToe)
+        self.othelloButton.bind(on_press=self.openOthello)
+        self.simonButton.bind(on_press=self.openSimon)
+        self.connectFourButton.bind(on_press=self.openConnectFour)
+
+    # Opens the TicTacToe popup
+    def openTicTacToe(self, *largs):
+        self.tttWidget = TicTacToeWidget()
+        self.tttPopup = Popup(title="Tic Tac Toe", content=self.tttWidget)
+        self.tttWidget.exitButton.bind(on_press=self.tttPopup.dismiss)
+        self.tttPopup.open()
+
+    # Opens the Othello popup
+    def openOthello(self, *largs):
+        self.othelloWidget = OthelloWidget()
+        self.othelloPopup = Popup(title="Othello", content=self.othelloWidget)
+        self.othelloWidget.exitButton.bind(on_press=self.othelloPopup.dismiss)
+        self.othelloPopup.open()
+
+    # Opens the Simon Popup, and the Start popup (not totally functional)
+    def openSimon(self, *largs):
+        self.simonWidget = SimonWidget()
+        self.simonPopup = Popup(title="Simon", content=self.simonWidget)
+        self.simonPopup.open()
+        self.simonWidget.startingPopUp()
+        self.simonWidget.exitButton.bind(on_press=self.simonPopup.dismiss)
+
+    # Opens the connect four popup
+    def openConnectFour(self, *largs):
+        self.connectFourWidget = ConnectFourWidget()
+        self.connectFourPopup = Popup(title="Connect Four", content=self.connectFourWidget)
+        self.connectFourPopup.open()
+        self.connectFourWidget.exitButton.bind(on_press=self.connectFourPopup.dismiss)
+
+class TicTacToeWidget(BoxLayout):
+    def __init__(self, *largs, **kwargs):
+        super(TicTacToeWidget, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 7
+
+        # Create the containers for the popup
+        self.boardContainer = BoxLayout(orientation='vertical', spacing=5, size_hint=(0.90, 1))
+        self.leftSideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+
+        self.ttt = TicTacToe()
+
+        # Create control buttons to be put in the side container
+        self.exitButton = Button(text="Exit", halign='right', valign='center')
+        self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
+
+        self.containerList = []
+        self.btnList = []
+
+        # Add buttons to rows in rowsContainer
+        for row in range(3):
+            self.containerList.append(BoxLayout(orientation='horizontal', spacing=5))
+            self.tempList = []
+            for col in range(3):
+                temp = Button(text='X', color=[192, 192, 192, 0.30], halign='right', valign='top', background_normal='atlas://data/images/defaulttheme/button_disabled', font_size=84, on_press=partial(self.playerMoveHelper, row, col))
+                self.containerList[row].add_widget(temp)
+                self.tempList.append(temp)
+            self.btnList.append(self.tempList)
+
+        for container in self.containerList:
+            self.boardContainer.add_widget(container)
+
+        # Add widgets to their respective containers
+        self.leftSideContainer.add_widget(self.exitButton)
+        self.leftSideContainer.add_widget(self.resetButton)
+        self.add_widget(self.leftSideContainer)
+        self.add_widget(self.boardContainer)
+
+    # Helper function for playerMove() (called by pressing a button)
+    def playerMoveHelper(self, row, col, *largs):
+        state = self.ttt.whoseTurn()
+        self.ttt.playerMove(row, col, state)
+
+        # Disable the chosen spot, and set it's text properly
+        self.btnList[row][col].disabled = True
+        if state == 1:
+            self.btnList[row][col].text = "X"
+        else:
+            self.btnList[row][col].text = "O"
+
+        # Code below is used to show whose turn it is / possible moves
+        for x in range(3):
+            for y in range(3):
+                if self.ttt.gameBoard[x][y] == 0:
+                    if state == 2:
+                        self.btnList[x][y].text = "X"
+                    else:
+                        self.btnList[x][y].text = "O"
+
+        self.isWinner(row, col, state)
+
+    # Determines if there is a winner, and displays an appropriate popup if there is
+    def isWinner(self, row, col, state):
+        if self.ttt.isWinner(row, col, state):
+            for row in range(3):
+                for col in range(3):
+                    self.btnList[row][col].disabled = True
+                    if self.ttt.gameBoard[row][col] == 0:
+                        self.btnList[row][col].text = ""
+
+            if state == 1:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Player X Wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                return
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Player O Wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                return
+
+        if self.ttt.getNumSpotsLeft() == 0:
+            self.popupDraw = Popup(title="Game Over", content=Label(text="Draw!!"), size_hint=(0.50, 0.50))
+            self.popupDraw.open()
+
+    # Resets game board and visual board
+    def resetGame(self, *largs):
+        self.ttt.spotsUsed = 0
+        self.ttt.recentState = 1
+        self.ttt.recentCol = 0
+        self.ttt.recentRow = 0
+        self.ttt.winner = -1
+
+        for row in range(3):
+            for col in range(3):
+                self.ttt.gameBoard[row][col] = 0
+                self.btnList[row][col].text = "X"
+                self.btnList[row][col].color = [192, 192, 192, 0.30]
+                self.btnList[row][col].disabled = False
+
+class OthelloWidget(BoxLayout):
+    def __init__(self, *largs, **kwargs):
+        super(OthelloWidget, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 7
+
+        # Create containers to divide the othello popup
+        self.boardContainer = BoxLayout(orientation='vertical', spacing=1, size_hint=(0.90, 1))
+        self.leftSideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+        self.rightSideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+
+        self.othello = Othello()
+
+        # Create exit & reset button for left side container
+        self.exitButton = Button(text="Exit", halign='right', valign='center')
+        self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
+
+        # Create buttons to track # of black and white tokens, as well as whose turn it is (for right side container)
+        self.blackTokenButton = Button(text=str(self.othello.twoCtr), background_disabled_normal='atlas://data/images/defaulttheme/button', halign='right', valign='center', disabled=True, background_color=[0, 0, 0, 1])
+        self.whiteTokenButton = Button(text=str(self.othello.oneCtr), color=[0, 0, 0, 1], background_disabled_normal='atlas://data/images/defaulttheme/button', halign='right', valign='center', disabled=True, background_color=[60, 179, 113, 1])
+        self.whoseTurnButton = Button(text="Turn", halign='right', background_disabled_normal='atlas://data/images/defaulttheme/button', valign='center', disabled=True, background_color=[0, 0, 0, 1])
+
+        self.containerList = []
+        self.btnList = []
+
+        # Add buttons to rows in rowsContainer
+        for row in range(8):
+            self.containerList.append(BoxLayout(orientation='horizontal', spacing=1))
+            self.tempList = []
+            for col in range(8):
+                temp = Button(halign='right', valign='top', background_disabled_normal='atlas://data/images/defaulttheme/button', background_color=[0, 100, 0, 0.50], on_press=partial(self.playerMoveHelper, row, col, self.othello.whoseTurn()))
+                self.containerList[row].add_widget(temp)
+                self.tempList.append(temp)
+            self.btnList.append(self.tempList)
+
+        # Manually add the four center tokens (do this so whoseTurn() isn't messed up, as black must go first)
+        self.othello.gameBoard[3][3] = 1
+        self.othello.gameBoard[3][4] = 2
+        self.othello.gameBoard[4][3] = 2
+        self.othello.gameBoard[4][4] = 1
+        self.btnList[3][3].background_color = [60, 179, 113, 1]
+        self.btnList[3][4].background_color = [0, 0, 0, 1]
+        self.btnList[4][3].background_color = [0, 0, 0, 1]
+        self.btnList[4][4].background_color = [60, 179, 113, 1]
+        self.btnList[3][3].disabled = True
+        self.btnList[3][4].disabled = True
+        self.btnList[4][3].disabled = True
+        self.btnList[4][4].disabled = True
+
+        # Add all the container rows to the row container
+        for container in self.containerList:
+            self.boardContainer.add_widget(container)
+
+        # Add widgets to their respective containers
+        self.rightSideContainer.add_widget(self.whiteTokenButton)
+        self.rightSideContainer.add_widget(self.blackTokenButton)
+        self.rightSideContainer.add_widget(self.whoseTurnButton)
+        self.leftSideContainer.add_widget(self.exitButton)
+        self.leftSideContainer.add_widget(self.resetButton)
+        self.add_widget(self.leftSideContainer)
+        self.add_widget(self.boardContainer)
+        self.add_widget(self.rightSideContainer)
+
+        for x in range(8):
+            for y in range(8):
+                if self.btnList[x][y].background_color == [0, 100, 0, 0.50]:
+                    if self.othello.checkForSwaps(x, y, self.othello.whoseTurn()) == []:
+                        self.btnList[x][y].disabled = True
+                    else:
+                        self.btnList[x][y].disabled = False
+
+    # Function called by the reset button, resets the game
+    def resetGame(self, *largs):
+
+        self.othello.oneCtr = 2
+        self.othello.twoCtr = 2
+        self.othello.placeCtr = 4
+
+        for row in range(8):
+            for col in range(8):
+                self.othello.gameBoard[row][col] = 0
+                self.btnList[row][col].background_color = [0, 100, 0, 0.50]
+                self.btnList[row][col].disabled = False
+
+        # Manually add the four center tokens (do this so whoseTurn() isn't messed up, as black must go first)
+        self.othello.gameBoard[3][3] = 1
+        self.othello.gameBoard[3][4] = 2
+        self.othello.gameBoard[4][3] = 2
+        self.othello.gameBoard[4][4] = 1
+        self.btnList[3][3].background_color = [60, 179, 113, 1]
+        self.btnList[3][4].background_color = [0, 0, 0, 1]
+        self.btnList[4][3].background_color = [0, 0, 0, 1]
+        self.btnList[4][4].background_color = [60, 179, 113, 1]
+        self.btnList[3][3].disabled = True
+        self.btnList[3][4].disabled = True
+        self.btnList[4][3].disabled = True
+        self.btnList[4][4].disabled = True
+
+        # Disable buttons for invalid moves
+        for x in range(8):
+            for y in range(8):
+                if self.btnList[x][y].background_color == [0, 100, 0, 0.50]:
+                    if self.othello.checkForSwaps(x, y, self.othello.whoseTurn()) == []:
+                        self.btnList[x][y].disabled = True
+                    else:
+                        self.btnList[x][y].disabled = False
+
+        # Update the display buttons
+        self.blackTokenButton.text = str(self.othello.twoCtr)
+        self.whiteTokenButton.text = str(self.othello.oneCtr)
+        self.whoseTurnButton.background_color = [0, 0, 0, 1]
+        self.whoseTurnButton.color = [1, 1, 1, 1]
+
+    # Helper function called when a placeButton is pressed
+    def playerMoveHelper(self, row, col, state, *largs):
+        state = self.othello.whoseTurn()
+
+        # Check for any swaps, if there are any, swap them
+        self.allSwaps = self.othello.playerMove(row, col, state)
+        if self.allSwaps != []:
+            for item in self.allSwaps:
+                if state == 2:
+                    self.btnList[item[0]][item[1]].background_color = [0, 0, 0, 1]
+                else:
+                    self.btnList[item[0]][item[1]].background_color = [60, 179, 113, 1]
+
+        # Disabled place button that was pressed
+        self.btnList[row][col].disabled = True
+
+        # Swap the whoseTurnButton, and the color of the pressed button
+        if state == 2:
+            self.whoseTurnButton.background_color = [60, 179, 113, 1]
+            self.whoseTurnButton.color = [0, 0, 0, 1]
+            self.btnList[row][col].background_color = [0, 0, 0, 1]
+        else:
+            self.whoseTurnButton.background_color = [0, 0, 0, 1]
+            self.whoseTurnButton.color = [1, 1, 1, 1]
+            self.btnList[row][col].background_color = [60, 179, 113, 1]
+
+        # Update the # of tokens there are currently on the buttons
+        self.blackTokenButton.text = str(self.othello.twoCtr)
+        self.whiteTokenButton.text = str(self.othello.oneCtr)
+
+        for x in range(8):
+            for y in range(8):
+                if self.btnList[x][y].background_color == [0, 100, 0, 0.50]:
+                    if self.othello.checkForSwaps(x, y, self.othello.whoseTurn()) == []:
+                        self.btnList[x][y].disabled = True
+                    else:
+                        self.btnList[x][y].disabled = False
+
+        self.checkWinner()
+
+    # Determines if there was a winner, and produces a popup for that winner
+    def checkWinner(self):
+        if self.othello.isWinner():
+            if self.othello.twoCtr > self.othello.oneCtr:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Black player wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+            elif self.othello.oneCtr > self.othello.twoCtr:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="White player wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Draw!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+
+class SimonWidget(BoxLayout):
+    def __init__(self, *largs, **kwargs):
+        super(SimonWidget, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 7
+
+        # Instantiate the buttons that will be in the side container
+        self.exitButton = Button(text="Exit", halign='right', valign='center')
+        self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
+
+        self.simon = Simon()
+
+        # Main container will contain top and bot containers, which will contain the colored buttons
+        self.sideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+        self.mainContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.90, 1))
+        self.topContainer = BoxLayout(orientation='horizontal', spacing=10)
+        self.botContainer = BoxLayout(orientation='horizontal', spacing=10)
+
+        # buttonList holds the color buttons
+        self.buttonList = []
+
+        # Holds the user inputted colors
+        self.userColorList = []
+
+        # Instantiate the color buttons, and bind them to add their respective color to the list
+        self.greenButton = Button(halign='right', valign='center', disabled=True, background_color=[0, 1, 0, 0.20], on_press=partial(self.addToUserColorList, "G"))
+        self.redButton = Button(halign='right', valign='center', disabled=True, background_color=[1, 0, 0, 0.20], on_press=partial(self.addToUserColorList, "R"))
+        self.yellowButton = Button(halign='right', valign='center', disabled=True, background_color=[255, 255, 0, 0.20], on_press=partial(self.addToUserColorList, "Y"))
+        self.blueButton = Button(halign='right', valign='center', disabled=True, background_color=[0, 0, 1, 0.20], on_press=partial(self.addToUserColorList, "B"))
+
+        self.buttonList.append(self.greenButton)
+        self.buttonList.append(self.redButton)
+        self.buttonList.append(self.yellowButton)
+        self.buttonList.append(self.blueButton)
+
+        # Add all widgets in proper order
+        self.topContainer.add_widget(self.greenButton)
+        self.topContainer.add_widget(self.redButton)
+        self.botContainer.add_widget(self.yellowButton)
+        self.botContainer.add_widget(self.blueButton)
+
+        self.sideContainer.add_widget(self.exitButton)
+        self.sideContainer.add_widget(self.resetButton)
+
+        self.mainContainer.add_widget(self.topContainer)
+        self.mainContainer.add_widget(self.botContainer)
+
+        self.add_widget(self.sideContainer)
+        self.add_widget(self.mainContainer)
+
+        # Create the start popup, which SHOULD start the game upon its dismissal, and has a 'Start' button that calls a function to dismiss itself
+        self.popupStart = Popup(title="Simon", content=Button(text="Start Game", on_press=self.dismissPopup), on_dismiss=self.startGame, size_hint=(0.50, 0.50))
+
+    def startingPopUp(self):
+        self.popupStart.open()
+
+    def dismissPopup(self, *largs):
+        self.popupStart.dismiss()
+
+    # Displays initial color, and allows for first userInput
+    def startGame(self, *largs):
+        self.simon.addColor()
+        self.displayOrder()
+        self.userInput()
+
+    # Use for debugging currently, will fully reset the game later
+    def resetGame(self, *largs):
+        self.userColorList = []
+
+    # If the user sequence was correctly, flash buttons green
+    def displayCorrect(self):
+        for button in self.buttonList:
+            button.disabled = True
+            button.background_color = [0, 1, 0, 1]
+
+    # Adds color to the list, and determines whether to let user continue input, or to stop the game
+    def addToUserColorList(self, color, *largs):
+        self.userColorList.append(color)
+
+        # If the user hasn't inputted enough colors, make sure their current input is correct, otherwise its game over
+        if len(self.simon.colorList) > len(self.userColorList):
+            if self.simon.colorList[0:len(self.userColorList)] == self.userColorList:
+                return
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Incorrect Order!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                return
+        # If the user has inputted enough colors, check the userColors again the gameColors
+        else:
+            # If the user is correct, flash green, return the buttons to normal colors, add a color to list,
+            # display current list, and await user input
+            if self.simon.isCorrect(self.userColorList):
+                self.displayCorrect()
+                time.sleep(3)
+                self.reAdjustColors()
+                self.simon.addColor()
+                self.displayOrder()
+                self.userInput()
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Incorrect Order!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+
+    # Used to return buttons to normal colors after flashing green
+    def reAdjustColors(self):
+        for i in range(len(self.buttonList)):
+            if i == 0:
+                self.buttonList[0].background_color = [0, 1, 0, 0.20]
+            elif i == 1:
+                self.buttonList[1].background_color = [1, 0, 0, 0.20]
+            elif i == 2:
+                self.buttonList[2].background_color = [255, 255, 0, 0.20]
+            elif i == 3:
+                self.buttonList[3].background_color = [0, 0, 1, 0.20]
+
+    # Enabled all buttons to enable input
+    def userInput(self):
+        self.buttonList[0].background_color = [0, 1, 0, 1]
+        self.buttonList[0].disabled = False
+        self.buttonList[1].background_color = [1, 0, 0, 1]
+        self.buttonList[1].disabled = False
+        self.buttonList[2].background_color = [255, 255, 0, 1]
+        self.buttonList[2].disabled = False
+        self.buttonList[3].background_color = [0, 0, 1, 1]
+        self.buttonList[3].disabled = False
+
+    # Iterates through gameColors, and displays each color in that order
+    def displayOrder(self):
+        order = self.simon.colorList
+        for i in range(len(order)):
+            if order[i] == "G":
+                #self.buttonList[0].background_color = [0, 1, 0, 1]
+                time.sleep(3)
+                self.buttonList[0].background_color = [255, 255, 255, 1]
+                time.sleep(3)
+                self.buttonList[0].background_color = [0, 1, 0, 0.20]
+            elif order[i] == "R":
+                time.sleep(3)
+                #self.buttonList[1].background_color = [1, 0, 0, 1]
+                self.buttonList[0].background_color = [255, 255, 255, 1]
+                time.sleep(3)
+                self.buttonList[1].background_color = [1, 0, 0, 0.20]
+            elif order[i] == "Y":
+                time.sleep(3)
+                #self.buttonList[2].background_color = [255, 255, 0, 1]
+                self.buttonList[0].background_color = [255, 255, 255, 1]
+                time.sleep(3)
+                self.buttonList[2].background_color = [255, 255, 0, 0.20]
+            elif order[i] == "B":
+                time.sleep(3)
+                #self.buttonList[3].background_color = [0, 0, 1, 1]
+                self.buttonList[0].background_color = [255, 255, 255, 1]
+                time.sleep(3)
+                self.buttonList[3].background_color = [0, 0, 1, 0.20]
+
+class ConnectFourWidget(BoxLayout):
+    def __init__(self, *largs,**kwargs):
+        super(ConnectFourWidget, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 7
+
+        # Create exit button for the pop up
+        self.exitButton = Button(text="Exit", halign='right', valign='center')
+        self.resetButton = Button(text="Reset", halign='right', valign='center', on_press=self.resetGame)
+
+        # Create ConnectFour object, and list to hold the placement buttons
+        self.connectFour = ConnectFour()
+        self.btnList = []
+
+        # Create buttons for each column, and place them in list
+        for i in range(7):
+            self.btnList.append(Button(text=str(i+1), halign='right', valign='top', on_press=partial(self.playerMoveHelper, i)))
+
+        # Create containers for the connect four game layout
+        self.boardContainer = BoxLayout(orientation='vertical', spacing=5, size_hint=(0.90, 1))
+        self.topContainer = BoxLayout(orientation='horizontal', spacing=1, size_hint=(1, 0.10))
+        self.rowsContainer = BoxLayout(orientation='vertical', spacing=1, size_hint=(1, 0.90))
+        self.sideContainer = BoxLayout(orientation='vertical', spacing=10, size_hint=(0.10, 1))
+
+        # Add each button in the list to the topContainer
+        for button in self.btnList:
+            self.topContainer.add_widget(button)
+
+        # containerList will hold the rows of buttons, boardButtonList is a 2d list of all gameButtons
+        self.containerList = []
+        self.boardButtonList = []
+
+        # Add labels to rows in rowsContainer
+        for row in range(6):
+            self.containerList.append(BoxLayout(orientation='horizontal', spacing=1))
+            self.tempList = []
+            for col in range(7):
+                temp = Button(halign='right', valign='top', disabled=True)
+                self.containerList[row].add_widget(temp)
+                self.tempList.append(temp)
+            self.boardButtonList.append(self.tempList)
+
+        # Add all the container rows to the row container
+        for container in self.containerList:
+            self.rowsContainer.add_widget(container)
+
+        # Determine which color to make the control buttons
+        if self.connectFour.whoseTurn() == 1:
+            for button in self.btnList:
+                button.background_color = [0, 0, 1, 1]
+        else:
+            for button in self.btnList:
+                button.background_color = [1, 0, 0, 1]
+
+        # Add all of the containers and buttons
+        self.boardContainer.add_widget(self.topContainer)
+        self.boardContainer.add_widget(self.rowsContainer)
+        self.sideContainer.add_widget(self.exitButton)
+        self.sideContainer.add_widget(self.resetButton)
+        self.add_widget(self.sideContainer)
+        self.add_widget(self.boardContainer)
+
+    # Function called by resetButton, resets all game boards and button colors for a new game
+    def resetGame(self, *largs):
+        for row in range(6):
+            for col in range(7):
+                self.boardButtonList[row][col].background_color = [169, 169, 169]
+
+        self.connectFour.reset()
+
+        for button in self.btnList:
+            button.disabled = False
+            if self.connectFour.whoseTurn() == 1:
+                button.background_color = [0, 0, 1, 1]
+            else:
+                button.background_color = [1, 0, 0, 1]
+
+    # Helper function for connectFour's playerMove() function
+    def playerMoveHelper(self, col, *largs):
+
+        # When pressing a control button, if it is the last button in the col, disable the respective control btn
+        if self.connectFour.getSpotState(1, col) != 0:
+            self.btnList[col].disabled = True
+            self.btnList[col].background_color = [0, 0, 0, 1]
+
+        x, y = self.connectFour.playerMove(col, self.connectFour.whoseTurn())
+
+        self.checkWinner(col)
+        self.buttonControl(x, y)
+
+    # Disable all the control buttons (for use after a player wins)
+    def disableControlButtons(self):
+        for button in self.btnList:
+            button.disabled = True
+
+    # Determine who won, and display a popUp
+    def checkWinner(self, col):
+        if self.connectFour.isWinner(col, self.connectFour.recentState):
+            if self.connectFour.recentState == 1:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Blue player wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                self.disableControlButtons()
+            else:
+                self.popupWinner = Popup(title="Game Over", content=Label(text="Red player wins!!"), size_hint=(0.50, 0.50))
+                self.popupWinner.open()
+                self.disableControlButtons()
+
+    # Determine which buttons to disable and change color of
+    def buttonControl(self, x, y):
+        if self.connectFour.whoseTurn() == 1:
+            self.boardButtonList[x][y].background_color = [1, 0, 0, 1]
+            for button in self.btnList:
+                if not button.disabled:
+                    button.background_color = [0, 0, 1, 1]
+        else:
+            self.boardButtonList[x][y].background_color = [0, 0, 1, 1]
+            for button in self.btnList:
+                if not button.disabled:
+                    button.background_color = [1, 0, 0, 1]
+
 class ControlWidgets(BoxLayout):
 
     def __init__(self, **kwargs):
@@ -647,17 +1234,27 @@ class ControlWidgets(BoxLayout):
 
         # Create widgets
         self.brightnessWidgets = BrightnessWidgets()
+        self.gameButton = Button(text="Games", halign='center', valign='center')
         self.quotaButton = Button(text="View Quota", halign='center', valign='center')
         self.exitButton = Button(text="Exit", halign='center', valign='center')
 
         # Configure buttons
         self.quotaButton.bind(on_press=self.openQuotaWidget)
         self.exitButton.bind(on_press=quitProg)
+        self.gameButton.bind(on_press=self.openGamesWidget)
 
         # Add widgets to view
         self.add_widget(self.brightnessWidgets)
         self.add_widget(self.quotaButton)
+        self.add_widget(self.gameButton)
         self.add_widget(self.exitButton)
+
+    def openGamesWidget(self, *largs):
+        self.gameWidget = GamesWidget()
+
+        self.popup = Popup(title="Games Selection", content=self.gameWidget)
+        self.gameWidget.closeButton.bind(on_press=self.popup.dismiss)
+        self.popup.open()
 
     def openQuotaWidget(self, *largs):
         # Create QuotaWidget object to display
@@ -705,7 +1302,7 @@ class MiddlePane(BoxLayout):
 
 class LeftPane(BoxLayout):
 
-    def __init__(self, **kwargs):
+    def __init__(self, middlePane, **kwargs):
         super(LeftPane, self).__init__(**kwargs)
 
         # Configure LeftPane object
@@ -713,10 +1310,14 @@ class LeftPane(BoxLayout):
         self.spacing = 10
 
         # Create widgets
-        self.timeWidget = TimeWidget()
         self.quoteWidget = QuoteWidget()
         self.weatherWidget = WeatherWidget()
         self.stockWidget = StockWidget()
+
+        timedUpdates = {86400: [self.quoteWidget.timerFun, middlePane.calendarWidget.daySelector.timerFun],
+                     300: [self.stockWidget.timerFun, self.weatherWidget.timerFun],
+                     1800: [middlePane.calendarWidget.timerFun]}
+        self.timeWidget = TimeWidget(timedUpdates)
 
         # Add widgets to view
         self.add_widget(self.timeWidget)
@@ -730,9 +1331,10 @@ class RootLayout(RelativeLayout):
         super(RootLayout, self).__init__(**kwargs)
 
         # Configure display panes
-        self.leftPane = LeftPane(pos_hint={'x': 0, 'y': 0}, size_hint=(0.25, 1))
         self.middlePane = MiddlePane(pos_hint={'x': 0.25, 'y': 0}, size_hint=(0.63, 1))
         self.rightPane = RightPane(pos_hint={'x': 0.88, 'y': 0}, size_hint=(0.12, 1))
+
+        self.leftPane = LeftPane(self.middlePane, pos_hint={'x': 0, 'y': 0}, size_hint=(0.25, 1))
 
         # Add panes to view
         self.add_widget(self.leftPane)
@@ -752,14 +1354,6 @@ class PiDay(App):
 
     def on_start(self):
         self.rootLayout.middlePane.calendarWidget.authenticate()
-
-        self.root_window.bind(on_show=self.startMidnightTimers)
-
-    def startMidnightTimers(self):
-        print("Running")
-        self.rootLayout.leftPane.stockWidget.startTimer()
-        self.rootLayout.leftPane.weatherWidget.startTimer()
-        self.rootLayout.leftPane.quoteWidget.startTimer()
 
 # Helper classes and functions
 # TODO: Make this work
