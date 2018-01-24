@@ -130,7 +130,7 @@ class WeatherWidget(RelativeLayout):
         currentJsonStr = makeHTTPRequest("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
 
         # If makeHTTPRequest returned False then there was an error, end the function
-        if not forecastJsonStr or not forecastJsonStr:
+        if not forecastJsonStr or not currentJsonStr:
             return
 
         forecastJsonDict = json.loads(forecastJsonStr)
