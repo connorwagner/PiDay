@@ -39,7 +39,7 @@ def getWeatherLocale():
 
 # Return a list of pGuid's of calendars that should not be displayed
 def getCalendarExceptions():
-    return ['C7C9B5E0-3EB9-4549-8089-B84CAFD60B03']
+    return ['C7C9B5E0-3EB9-4549-8089-B84CAFD60B03', 'e4de89917d71f7aaa39b44ec86f1525344c98f6ff0d50fc7ba264311f2d357f5', '181b9ea99546df14b5b6e193cd4249d01043c401e2d5b82f715381c5a926323b']
 
 # Return a curl command as a string
 def getQuotaCurl():

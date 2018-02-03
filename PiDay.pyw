@@ -286,34 +286,34 @@ class StockDetailsWidget(BoxLayout):
         jsonData = makeHTTPRequest('https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=' + stocksListStr + '&apikey=DBC2MS0TUABOLZ04')
         data = json.loads(jsonData)
 
-        #try:
-        for stockInfo in data["Stock Quotes"]:
-            for stockList in stocksListOfLists:
-                if stockList[0] != stockInfo["1. symbol"]:
-                    continue
+        try:
+            for stockInfo in data["Stock Quotes"]:
+                for stockList in stocksListOfLists:
+                    if stockList[0] != stockInfo["1. symbol"]:
+                        continue
 
-                boughtAtString = str(stockList[1])
-                boughtAtInt = int(stockList[1])
-                if float(boughtAtInt) == stockList[1]:
-                    boughtAtString += "0"
+                    boughtAtString = str(stockList[1])
+                    boughtAtInt = int(stockList[1])
+                    if float(boughtAtInt) == stockList[1]:
+                        boughtAtString += "0"
 
-                price = stockInfo["2. price"]
-                gainLossString = ""
-                gainLoss = (float(price) - float(stockList[1])) * stockList[2]
-                if gainLoss < 0:
-                    gainLossString = "- $ " + str("%.2f" % abs(gainLoss))
-                else:
-                    gainLossString = "+ $ " + str("%.2f" % abs(gainLoss))
+                    price = stockInfo["2. price"]
+                    gainLossString = ""
+                    gainLoss = (float(price) - float(stockList[1])) * stockList[2]
+                    if gainLoss < 0:
+                        gainLossString = "- $ " + str("%.2f" % abs(gainLoss))
+                    else:
+                        gainLossString = "+ $ " + str("%.2f" % abs(gainLoss))
 
-                self.accountGainLoss += gainLoss
+                    self.accountGainLoss += gainLoss
 
-                self.accountWorth += float(price) * stockList[2]
+                    self.accountWorth += float(price) * stockList[2]
 
-                self.stockPriceList.append([str(stockList[0]), gainLossString, ("$ %.2f" % float(price)), "$ " + boughtAtString, str(stockList[2])])
-#        except:
-#            pricesStr = "Error retrieving data"
-#            self.updateUI()
-#            return
+                    self.stockPriceList.append([str(stockList[0]), gainLossString, ("$ %.2f" % float(price)), "$ " + boughtAtString, str(stockList[2])])
+        except:
+            pricesStr = "Error retrieving data"
+            self.updateUI()
+            return
 
 class DaySelector(BoxLayout):
 
@@ -327,13 +327,13 @@ class DaySelector(BoxLayout):
         # Initialize data variables
         self.dayList = ['U', 'M', 'T', 'W', 'R', 'F', 'S']
         self.dayAdjustment = int(time.strftime("%w"))
-        self.selectedDay = 0
         self.calendarObject = calendarObject
 
         self.timerFun()
 
     def timerFun(self, *largs):
         self.dayAdjustment = int(time.strftime("%w"))
+        self.selectedDay = 0
 
         # Remove all existing widgets
         self.clear_widgets()
@@ -450,6 +450,7 @@ class CalendarWidget(BoxLayout):
         for event in events:
             # Ensure that the event is not on a calendar that the user does not wish to see
             if event['pGuid'] not in exceptions:
+                print(event['pGuid'], event['title'])
                 daysDiff = (datetime.strptime(str(event['localStartDate'][0]), dateFormat) - datetime.strptime(today, dateFormat)).days
                 # Try statement needed because the API hands back a list of the next 7 days with events in them, so if the current day has no events then it will hand back too many days and the number of days' difference will be 7, exceeding the length of our list
                 try:
@@ -609,6 +610,27 @@ class QuotaWidget(BoxLayout):
         weeklyCurl[1] += "weekly"
         with open('%s/weeklyQuota.png' % self.workingDir, 'w') as file:
             subprocess.call(weeklyCurl, stdout=file)
+
+class SystemMenuWidget(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(SystemMenuWidget, self).__init__(**kwargs)
+
+        self.orientation = 'vertical'
+        self.spacing = 10
+
+        self.container = BoxLayout(orientation='horizontal', spacing=10)
+        self.exitButton = Button(text="Exit PiDay", halign='center', valign='center')
+        self.rebootButton = Button(text="Reboot Pi", halign='center', valign='center')
+        self.closeButton = Button(text="Close Popup", halign='center', valign='center')
+
+        self.container.add_widget(self.exitButton)
+        self.container.add_widget(self.rebootButton)
+        self.add_widget(self.container)
+        self.add_widget(self.closeButton)
+
+        self.exitButton.bind(on_press=quitProg)
+        self.rebootButton.bind(on_press=rebootPi)
 
 class GamesWidget(RelativeLayout):
 
@@ -1236,18 +1258,28 @@ class ControlWidgets(BoxLayout):
         self.brightnessWidgets = BrightnessWidgets()
         self.gameButton = Button(text="Games", halign='center', valign='center')
         self.quotaButton = Button(text="View Quota", halign='center', valign='center')
-        self.exitButton = Button(text="Exit", halign='center', valign='center')
+        self.menuButton = Button(text="System Menu", halign='center', valign='center')
+        #self.exitButton = Button(text="Exit", halign='center', valign='center')
 
         # Configure buttons
         self.quotaButton.bind(on_press=self.openQuotaWidget)
-        self.exitButton.bind(on_press=quitProg)
+        #self.exitButton.bind(on_press=quitProg)
+        self.menuButton.bind(on_press=self.openSystemMenu)
         self.gameButton.bind(on_press=self.openGamesWidget)
 
         # Add widgets to view
         self.add_widget(self.brightnessWidgets)
         self.add_widget(self.quotaButton)
         self.add_widget(self.gameButton)
-        self.add_widget(self.exitButton)
+        #self.add_widget(self.exitButton)
+        self.add_widget(self.menuButton)
+
+    def openSystemMenu(self, *largs):
+        self.systemMenuWidget = SystemMenuWidget()
+
+        self.popup = Popup(title="System Menu", content=self.systemMenuWidget)
+        self.systemMenuWidget.closeButton.bind(on_press=self.popup.dismiss)
+        self.popup.open()
 
     def openGamesWidget(self, *largs):
         self.gameWidget = GamesWidget()
@@ -1507,9 +1539,16 @@ def makeHTTPRequest(url):
     return response
 
 def quitProg(*largs):
+    print("quitProg")
     workingDir = str(subprocess.check_output('pwd'))[2:-3]
     subprocess.call(['rm', '%s/dailyQuota.png' % workingDir, '%s/weeklyQuota.png' % workingDir])
     quit()
+
+def rebootPi(*largs):
+    print("rebootPi")
+    workingDir = str(subprocess.check_output('pwd'))[2:-3]
+    subprocess.call(['rm', '%s/dailyQuota.png' % workingDir, '%s/weeklyQuota.png' % workingDir])
+    subprocess.call(['sudo', 'reboot'])
 
 # Start the program
 if __name__ == "__main__":
