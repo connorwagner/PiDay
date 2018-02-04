@@ -33,9 +33,9 @@ def getStocks():
             ['GOOGL', 0, 0],
             ['NVDA', 0, 0]]
 
-# Return weather locale string, in the format City,ST,[CN]
+# Return weather locale string as a ZIP code
 def getWeatherLocale():
-    return 'Upland,IN,US'
+    return '46989'
 
 # Return a list of pGuid's of calendars that should not be displayed
 def getCalendarExceptions():

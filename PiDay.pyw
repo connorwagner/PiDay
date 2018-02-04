@@ -64,11 +64,8 @@ class QuoteWidget(BoxLayout):
     def __init__(self, **kwargs):
         super(QuoteWidget, self).__init__(**kwargs)
 
-        # Initialize data variables
-        self.recur = None
-
         # Initialize label
-        self.quoteLabel = Label(text='Quote here', halign='center', valign='center', max_lines=8)
+        self.quoteLabel = Button(background_color=[0, 0, 0, 1], on_press=self.timerFun, text='Quote here', halign='center', valign='center')
 
         # Add label to view
         self.add_widget(self.quoteLabel)
@@ -76,7 +73,6 @@ class QuoteWidget(BoxLayout):
         # Configure label to adjust height to fit text (can only be done after label has been added to a view)
         self.quoteLabel.size = (self.quoteLabel.parent.width * 1.85, self.quoteLabel.texture_size[1])
         self.quoteLabel.text_size = (self.quoteLabel.width, None)
-        self.quoteLabel.size_hint = (1, None)
 
         self.timerFun()
 
@@ -92,10 +88,6 @@ class QuoteWidget(BoxLayout):
 
         # Update text on label
         self.quoteLabel.text = quote
-
-        # Update label position
-        self.quoteLabel.pos_hint = {'x': 0, 'y': self.quoteLabel.height + .5}
-        self.size = (self.quoteLabel.width, self.quoteLabel.height)
 
 class WeatherWidget(RelativeLayout):
 
@@ -124,10 +116,10 @@ class WeatherWidget(RelativeLayout):
         #  another item in that dictionary is 'main', that is a dictionary containing the weather statistics
 
         # Get forecast data and convert to dictionary from JSON
-        forecastJsonStr = makeHTTPRequest("http://api.openweathermap.org/data/2.5/forecast?q=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
+        forecastJsonStr = makeHTTPRequest("http://api.openweathermap.org/data/2.5/forecast?zip=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
 
         # Get current weather data and convert to dictionary from JSON
-        currentJsonStr = makeHTTPRequest("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
+        currentJsonStr = makeHTTPRequest("http://api.openweathermap.org/data/2.5/weather?zip=%s&appid=533616ff356c7a5963e935e12fbb9306&units=imperial" % getWeatherLocale())
 
         # If makeHTTPRequest returned False then there was an error, end the function
         if not forecastJsonStr or not currentJsonStr:
@@ -1259,11 +1251,9 @@ class ControlWidgets(BoxLayout):
         self.gameButton = Button(text="Games", halign='center', valign='center')
         self.quotaButton = Button(text="View Quota", halign='center', valign='center')
         self.menuButton = Button(text="System Menu", halign='center', valign='center')
-        #self.exitButton = Button(text="Exit", halign='center', valign='center')
 
         # Configure buttons
         self.quotaButton.bind(on_press=self.openQuotaWidget)
-        #self.exitButton.bind(on_press=quitProg)
         self.menuButton.bind(on_press=self.openSystemMenu)
         self.gameButton.bind(on_press=self.openGamesWidget)
 
@@ -1271,7 +1261,6 @@ class ControlWidgets(BoxLayout):
         self.add_widget(self.brightnessWidgets)
         self.add_widget(self.quotaButton)
         self.add_widget(self.gameButton)
-        #self.add_widget(self.exitButton)
         self.add_widget(self.menuButton)
 
     def openSystemMenu(self, *largs):
@@ -1297,10 +1286,16 @@ class ControlWidgets(BoxLayout):
 
         # Display popup
         self.popup = Popup(title="Quota Usage", content=self.quotaWidget)
-        self.quotaWidget.closeButton.bind(on_press=self.popup.dismiss)
+        self.quotaWidget.closeButton.bind(on_press=self.closeQuotaWidget)
         self.popup.open()
 
         self.quotaWidget.updateImageDisplays()
+
+    def closeQuotaWidget(self, *largs):
+        workingDir = str(subprocess.check_output('pwd'))[2:-3]
+        subprocess.call(['rm', '%s/dailyQuota.png' % workingDir, '%s/weeklyQuota.png' % workingDir])
+
+        self.popup.dismiss()
 
 class RightPane(BoxLayout):
 
@@ -1385,20 +1380,39 @@ class PiDay(App):
         return self.rootLayout
 
     def on_start(self):
+        self.checkLaunch()
+        # self.rootLayout.middlePane.calendarWidget.authenticate()
+
+    def checkLaunch(self):
+        self.yesButton = Button(text="Yes", on_press=self.launchApp)
+        self.noButton = Button(text="No", on_press=quitProg)
+
+        self.container = BoxLayout(orientation='horizontal')
+        self.container.add_widget(self.yesButton)
+        self.container.add_widget(self.noButton)
+
+        self.popup = Popup(title="Launch PiDay?", content=self.container)
+        self.popup.open()
+
+    def launchApp(self, *largs):
+        self.popup.dismiss()
         self.rootLayout.middlePane.calendarWidget.authenticate()
 
 # Helper classes and functions
-# TODO: Make this work
 class LoadingIndicator(Popup):
 
     def __init__(self, **kwargs):
         super(LoadingIndicator, self).__init__(**kwargs)
 
         self.progressBar = ProgressBar(max=1, value=0)
-        self.add_widget(self.progressBar)
+        self.popup = Popup(title="Loading…", content=self.progressBar)
+
+        self.popup.open()
 
     def update(self, value):
         self.progressBar.value = value
+        if value == 1:
+            self.popup.dismiss()
 
 class TwoFactorAuthScreen(Popup):
 
@@ -1539,13 +1553,9 @@ def makeHTTPRequest(url):
     return response
 
 def quitProg(*largs):
-    print("quitProg")
-    workingDir = str(subprocess.check_output('pwd'))[2:-3]
-    subprocess.call(['rm', '%s/dailyQuota.png' % workingDir, '%s/weeklyQuota.png' % workingDir])
     quit()
 
 def rebootPi(*largs):
-    print("rebootPi")
     workingDir = str(subprocess.check_output('pwd'))[2:-3]
     subprocess.call(['rm', '%s/dailyQuota.png' % workingDir, '%s/weeklyQuota.png' % workingDir])
     subprocess.call(['sudo', 'reboot'])
